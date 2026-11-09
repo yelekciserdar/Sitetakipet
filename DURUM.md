@@ -5,7 +5,7 @@
 - [ ] **Ev sahibi** (`claude/ev-sahibi` dalı, 9 Kasım): ev sahibi kartı ve Kiracılı/Ev sahibi/Boş durumu hazır; önizleme gösterildi, kullanıcı onayı bekleniyor.
 - [x] **İlk sürüm** (9 Kasım, kullanıcı onayladı, PR #1): şema, kira ve banka kuralları, API, 18 test, arayüz, çoklu site ve site yetkisi, Docker/README.
 - [x] **Arayüz renkleri (9 Kasım, kullanıcı kararı):** #F0F0F0 marshmallow beyazı (zemin), #105BFF (ana renk), #FE8500 (vurgu/uyarı). Yazılar okunurluk için koyu nötr gri. Yazı logo: "Kira" koyu, "Takip" #105BFF, "Et" #FE8500. 
-- [ ] **Logo (9 Kasım):** ad SiteTakipEt. Kullanıcı seçimi: katlanmış kâğıt **ev başlı anahtar**, başın içinde sarı site blokları (tek ev değil; emlakçı çağrışımı azalsın diye). Renkler: kraliyet mavisi #105BFF zemin, beyaz anahtar, sarı #FFD100 bloklar; yazı "Site" koyu + "TakipEt" #105BFF. Turuncu yok. Son onaydan sonra uygulamaya, giriş ekranına, sekme simgesine ve tanıtım sayfasına konacak.
+- [ ] **Logo (9 Kasım):** ad SiteTakipEt. Kullanıcı seçimi: katlanmış kâğıt **ev başlı anahtar**, başın içinde sarı site blokları (tek ev değil; emlakçı çağrışımı azalsın diye). Renkler: kraliyet mavisi #105BFF zemin, beyaz anahtar, sarı #FFD100 bloklar; yazı "Site" koyu + "TakipEt" #105BFF. Turuncu yok. Kullanıcı onayladı (mavi zeminli simge); sırada uygulamaya, giriş ekranına, sekme simgesine ve tanıtım sayfasına konacak.
 - [ ] Excel'den aktarım: müşterinin "Kira Takip" .xlsm dosyasındaki daire/kiracı/kira sayfalarını içe alma (müşteri isterse).
 - [ ] Canlı kurulum: alan adı, sunucu, HTTPS, yedekleme; `VERI_ANAHTARI` (T.C. şifre anahtarı) güvenli saklanacak.
 - [ ] Satış: fiyatlandırma, deneme süresi, firma açma akışı (şimdilik `npm run firma:olustur`).
