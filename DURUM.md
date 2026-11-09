@@ -1,6 +1,7 @@
 # Durum ve yol haritası
 
 ## Sıradaki ve yarım kalan işler
+- [ ] **Ev sahibi** (`claude/ev-sahibi` dalı, 9 Kasım): ev sahibi kartı ve Kiracılı/Ev sahibi/Boş durumu hazır; önizleme gösterildi, kullanıcı onayı bekleniyor.
 - [x] **İlk sürüm** (9 Kasım, kullanıcı onayladı, PR #1): şema, kira ve banka kuralları, API, 18 test, arayüz, çoklu site ve site yetkisi, Docker/README.
 - [x] **Arayüz renkleri (9 Kasım, kullanıcı kararı):** #F0F0F0 marshmallow beyazı (zemin), #105BFF (ana renk), #FE8500 (vurgu/uyarı). Yazılar okunurluk için koyu nötr gri. Yazı logo: "Kira" koyu, "Takip" #105BFF, "Et" #FE8500. 
 - [ ] **Logo** (simge) kullanıcıda; gelince geçici "K" işaretinin yerine konur.
@@ -9,6 +10,8 @@
 - [ ] Satış: fiyatlandırma, deneme süresi, firma açma akışı (şimdilik `npm run firma:olustur`).
 
 ## Fikir kutusu
+- Ev sahibine kira aktarımı: tahsil edilen kiradan yönetim komisyonu düşülüp ev sahibine ödenecek tutar, ev sahibi ekstresi (kullanıcıya soruldu, 9 Kasım).
+- Ev sahibinin oturduğu dairelerde aidat/gider takibi.
 - Site başına ayrı banka hesabı / ekstre (bugün ekstre firma geneli, eşleşme bütün sitelerde aranır).
 - Site bazında karşılaştırmalı rapor (doluluk, tahsilat oranı).
 - Kiracıya otomatik SMS/WhatsApp hatırlatma (bugün: metin ve bağlantı hazırlanıyor, gönderim elle).

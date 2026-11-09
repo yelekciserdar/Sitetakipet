@@ -277,3 +277,8 @@ a.dugme { text-decoration: none; display: inline-block; }
 .site-kutular { border: 1px solid var(--cizgi); border-radius: 8px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .site-kutular legend { font-size: 13px; color: var(--soluk); padding: 0 4px; }
 .site-kutular[hidden] { display: none; }
+
+/* ---- Ev sahibi ---- */
+.rozet.koyu { background: #E4E4EA; color: var(--yazi); }
+.daire-kart.ev-sahibi { border-left-color: var(--yazi); background: #F7F7F9; }
+.takvim-lejant .l-ev { background: #F7F7F9; border: 2px solid var(--yazi); }

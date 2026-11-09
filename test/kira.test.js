@@ -64,7 +64,7 @@ test('kiracı yerleştirme: bu ayın borcu oluşur, daire dolu olur, ikinci akti
   assert.equal(r.veri.borclar[0].tutar, 30000);
   assert.equal((await y.post('/api/sozlesmeler', { daire_id: daireA, baslangic: bugun(), aylik_kira: 1, kisi: { ad_soyad: 'Başka' } })).status, 409);
   const d = (await y.get('/api/daireler')).veri.find((x) => x.id === daireA);
-  assert.equal(d.durum, 'Dolu');
+  assert.equal(d.durum, 'Kiracılı');
   assert.equal(d.ad_soyad, 'Mehmet Demir');
 });
 
@@ -367,4 +367,41 @@ test('çoklu site: aynı daire no farklı sitede açılır, site süzgeci, perso
   await u.giris('uc@deneme.test', PAROLA);
   assert.equal((await u.post('/api/daireler', { site_id: gunes.veri.id, daire_no: '1' })).status, 404);
   assert.equal((await u.get('/api/siteler')).veri.length, 1);
+});
+
+test('ev sahibi: daireye ev sahibi bağlanır, ev sahibinin oturduğu daire boş sayılmaz ve kira borcu almaz', async () => {
+  const site = (await y.get('/api/siteler')).veri.find((x) => x.ad === 'Ana Site');
+  const r = await y.post('/api/daireler', { site_id: site.id, daire_no: '20', blok: 'A', ev_sahibi: { ad_soyad: 'Deneme Ev Sahibi', telefon: '0555 111 11 11' }, ev_sahibi_oturuyor: true });
+  assert.equal(r.status, 200);
+  let d = (await y.get(`/api/daireler?site_id=${site.id}`)).veri.find((x) => x.id === r.veri.id);
+  assert.equal(d.durum, 'Ev sahibi');
+  assert.equal(d.ev_sahibi_ad, 'Deneme Ev Sahibi');
+  const oz = (await y.get(`/api/ozet?site_id=${site.id}`)).veri;
+  assert.equal(oz.daire_ev_sahibi, 1);
+  assert.equal(oz.daire_toplam, oz.daire_dolu + oz.daire_ev_sahibi + oz.daire_bos);
+  // Tahakkuk ev sahibinin oturduğu daireye borç yazmaz
+  await y.post('/api/borclar/olustur', { donem: buAy() });
+  assert.equal((await y.get(`/api/borclar?daire_id=${r.veri.id}`)).veri.length, 0);
+  // Ev sahibi bilgisini güncelleme aynı kartı değiştirir
+  await y.put(`/api/daireler/${r.veri.id}`, { site_id: site.id, daire_no: '20', blok: 'A', ev_sahibi: { ad_soyad: 'Deneme Ev Sahibi', telefon: '0555 222 22 22', iban: 'TR00 0000 0000 0000 0000 0000 99' } });
+  d = (await y.get(`/api/daireler?site_id=${site.id}`)).veri.find((x) => x.id === r.veri.id);
+  assert.equal(d.ev_sahibi_telefon, '0555 222 22 22');
+  assert.equal(d.ev_sahibi_oturuyor, true); // gönderilmeyen bayrak korunur
+  assert.equal((await y.put(`/api/daireler/${r.veri.id}`, { daire_no: '20', blok: 'A', ev_sahibi: { ad_soyad: 'X', iban: 'TR12' } })).status, 400);
+  // Ev sahibinin oturduğu daire kiraya verilince "Kiracılı" olur, ev sahibi bilgisi kalır
+  const s2 = await y.post('/api/sozlesmeler', { daire_id: r.veri.id, baslangic: bugun(), aylik_kira: 15000, kisi: { ad_soyad: 'Yeni Kiracı' } });
+  assert.equal(s2.status, 200);
+  assert.equal(s2.veri.ev_sahibi_ad, 'Deneme Ev Sahibi');
+  d = (await y.get(`/api/daireler?site_id=${site.id}`)).veri.find((x) => x.id === r.veri.id);
+  assert.equal(d.durum, 'Kiracılı');
+  assert.equal(d.ev_sahibi_oturuyor, false);
+  // Kiracılı daireye "ev sahibi oturuyor" denemez
+  assert.equal((await y.put(`/api/daireler/${r.veri.id}`, { daire_no: '20', blok: 'A', ev_sahibi_oturuyor: true })).status, 409);
+  // Kiracı ayrılınca daire boş olur; ev sahibi bağı kaldırılabilir
+  await y.post(`/api/sozlesmeler/${s2.veri.id}/ayril`, { tarih: bugun() });
+  d = (await y.get(`/api/daireler?site_id=${site.id}`)).veri.find((x) => x.id === r.veri.id);
+  assert.equal(d.durum, 'Boş');
+  await y.put(`/api/daireler/${r.veri.id}`, { daire_no: '20', blok: 'A', ev_sahibi: null });
+  d = (await y.get(`/api/daireler?site_id=${site.id}`)).veri.find((x) => x.id === r.veri.id);
+  assert.equal(d.ev_sahibi_ad, null);
 });
