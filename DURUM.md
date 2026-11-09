@@ -1,6 +1,7 @@
 # Durum ve yol haritası
 
 ## Sıradaki ve yarım kalan işler
+- [ ] **Yeniden konumlandırma (9 Kasım, kullanıcı):** ürünü site yönetim/danışmanlık firmaları kullanacak; konu kira değil **aidat** (ve site giderleri). Ev sahibine aktarım/komisyon yok. Mevcut altyapı (daire, kişi, aylık tahakkuk, ödeme dağıtımı, banka eşleştirme, gecikenler, çoklu site, ev sahibi=malik) korunur; aidat planı, gider ve kasa, gecikme tazminatı, makbuz eklenecek. Ürün adı sorusu kullanıcıda.
 - [ ] **Ev sahibi** (`claude/ev-sahibi` dalı, 9 Kasım): ev sahibi kartı ve Kiracılı/Ev sahibi/Boş durumu hazır; önizleme gösterildi, kullanıcı onayı bekleniyor.
 - [x] **İlk sürüm** (9 Kasım, kullanıcı onayladı, PR #1): şema, kira ve banka kuralları, API, 18 test, arayüz, çoklu site ve site yetkisi, Docker/README.
 - [x] **Arayüz renkleri (9 Kasım, kullanıcı kararı):** #F0F0F0 marshmallow beyazı (zemin), #105BFF (ana renk), #FE8500 (vurgu/uyarı). Yazılar okunurluk için koyu nötr gri. Yazı logo: "Kira" koyu, "Takip" #105BFF, "Et" #FE8500. 
