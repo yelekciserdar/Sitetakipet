@@ -78,7 +78,7 @@ test('geçmiş dönem borcu elle oluşturulur, iki kez oluşturulsa da çift bor
   const g = (await p.get('/api/gecikenler')).veri;
   assert.equal(g.length, 1);
   assert.ok(g[0].geciken_tutar >= 60000);
-  assert.match(g[0].sms, /Sayın Mehmet Demir, A Blok 15 için/);
+  assert.match(g[0].sms, /Sayın Mehmet Demir, A Blok 15 için (Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık) \d{4}/);
   assert.match(g[0].whatsapp, /^https:\/\/wa\.me\/905550000001\?text=/);
 });
 
