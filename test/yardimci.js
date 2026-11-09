@@ -47,6 +47,7 @@ function istemci(taban) {
     post: (y, g = {}) => istek('POST', y, g),
     put: (y, g = {}) => istek('PUT', y, g),
     giris: (eposta, parola) => istek('POST', '/api/giris', { eposta, parola }),
+    cerez: () => cerez,
   };
 }
 
