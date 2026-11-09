@@ -6,6 +6,7 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ## 2026-11-09
 
+- **Tanıtım sayfası** (`tanitim/`): KiraTakipEt maket sayfası SiteTakipEt'e uyarlandı: aidat dili, yeni logo ve sekme simgesi, "Giriş yap" bağlantısı (panel.sitetakipet.com.tr), turuncu yerine sarı vurgu (yazıda fosforlu kalem çizgisi), telefonda yatay taşma kırpıldı. Önizleme gösterildi.
 - **SiteTakipEt logosu programa kondu (önizleme, onay bekliyor):** giriş ekranı, kenar çubuğu, telefon üst çubuğu ve sekme simgesi (`public/logo-isaret.svg`, `favicon.svg`); sayfa başlığı SiteTakipEt; yazı "Site" koyu + "TakipEt" mavi; giriş ekranı metni site yönetimine göre; giriş şeridindeki turuncu sarıya döndü.
 - Logo çalışması: ET simgesiyle aynı katlanmış kâğıt tarzında simgeler hazırlandı, önizleme gösterildi. Kullanıcı kararı: logolarda turuncu kullanılmaz; yazıda ürün adı koyu, "TakipEt" mavi. Karar DURUM.md'ye işlendi.
 - Logo: harf simgeleri yerine ürünü anlatan simge fikirleri çizildi; kullanıcı ev anahtarını seçti, renk uyumları gösterildi. Son hâl: ev başlı anahtar içinde sarı site blokları, kraliyet mavisi zemin.

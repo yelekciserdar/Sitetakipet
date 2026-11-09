@@ -10,6 +10,9 @@
 - [ ] Canlı kurulum: alan adı, sunucu, HTTPS, yedekleme; `VERI_ANAHTARI` (T.C. şifre anahtarı) güvenli saklanacak.
 - [ ] Satış: fiyatlandırma, deneme süresi, firma açma akışı (şimdilik `npm run firma:olustur`).
 
+- [ ] **Tanıtım sayfası** (`tanitim/`, 9 Kasım): mimari maket sayfası SiteTakipEt'e uyarlandı (aidat dili, yeni logo, turuncu yerine sarı); önizleme gösterildi, onay bekleniyor. Panel ekran görüntüsü aidat modülü bitince yenilenecek.
+- [ ] **Canlıya alma (SiteTakipEt):** sunucuda veritabanı ve kullanıcı, PM2 süreci, nginx (sitetakipet.com.tr → `tanitim/`, panel.sitetakipet.com.tr → program), Cloudflare DNS (önce gri bulut, sertifika, sonra turuncu), GitHub Actions ile otomatik güncelleme, yedeğe ekleme, `VERI_ANAHTARI` üretip Drive'a saklama, ilk firma. Kurulum betiğini Claude hazırlar, kullanıcı sunucuda çalıştırır. Satıştan önce aidat modülü bitmeli.
+
 ## Fikir kutusu
 - Ev sahibine kira aktarımı: tahsil edilen kiradan yönetim komisyonu düşülüp ev sahibine ödenecek tutar, ev sahibi ekstresi (kullanıcıya soruldu, 9 Kasım).
 - Ev sahibinin oturduğu dairelerde aidat/gider takibi.
