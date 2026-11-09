@@ -1,0 +1,2 @@
+# kiratakipet
+aidat takip
