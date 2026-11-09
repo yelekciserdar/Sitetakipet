@@ -4,6 +4,9 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ---
 
+## 9 Kasım 2026
+- Logo çalışması: ET simgesiyle aynı katlanmış kâğıt tarzında simgeler hazırlandı, önizleme gösterildi. Kullanıcı kararı: logolarda turuncu kullanılmaz; yazıda ürün adı koyu, "TakipEt" mavi. Karar DURUM.md'ye işlendi.
+
 ## 2026-11-09
 
 - **Ev sahibi** (kullanıcı: dairede kiracı değil ev sahibi de oturabilir): her daireye ev sahibi kartı (ad, telefon, e-posta, IBAN) bağlanır; oturum durumu Kiracılı / Ev sahibi / Boş. Ev sahibinin oturduğu daireye kira borcu yazılmaz, boş sayılmaz; kiraya verilince kendiliğinden Kiracılı olur. Panel, özet ve siteler tablosunda üç ayrı sayım; daire listesinde Oturan ve Ev sahibi sütunları (göç 004). 19 test yeşil.

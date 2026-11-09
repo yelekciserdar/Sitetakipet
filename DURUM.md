@@ -5,7 +5,7 @@
 - [ ] **Ev sahibi** (`claude/ev-sahibi` dalı, 9 Kasım): ev sahibi kartı ve Kiracılı/Ev sahibi/Boş durumu hazır; önizleme gösterildi, kullanıcı onayı bekleniyor.
 - [x] **İlk sürüm** (9 Kasım, kullanıcı onayladı, PR #1): şema, kira ve banka kuralları, API, 18 test, arayüz, çoklu site ve site yetkisi, Docker/README.
 - [x] **Arayüz renkleri (9 Kasım, kullanıcı kararı):** #F0F0F0 marshmallow beyazı (zemin), #105BFF (ana renk), #FE8500 (vurgu/uyarı). Yazılar okunurluk için koyu nötr gri. Yazı logo: "Kira" koyu, "Takip" #105BFF, "Et" #FE8500. 
-- [ ] **Logo** (simge) kullanıcıda; gelince geçici "K" işaretinin yerine konur.
+- [ ] **Logo (9 Kasım):** ad SiteTakipEt; ET simgesiyle aynı katlanmış kâğıt tarzında mavi zemin + açık mavi çatı + "ST" seçildi. Kullanıcı kararı: logolarda turuncu yok; yazı "Site" koyu + "TakipEt" mavi. Son onaydan sonra uygulamaya, giriş ekranına, sekme simgesine ve tanıtım sayfasına konacak (dosyalar oturum klasöründe, `uret2.py`).
 - [ ] Excel'den aktarım: müşterinin "Kira Takip" .xlsm dosyasındaki daire/kiracı/kira sayfalarını içe alma (müşteri isterse).
 - [ ] Canlı kurulum: alan adı, sunucu, HTTPS, yedekleme; `VERI_ANAHTARI` (T.C. şifre anahtarı) güvenli saklanacak.
 - [ ] Satış: fiyatlandırma, deneme süresi, firma açma akışı (şimdilik `npm run firma:olustur`).
