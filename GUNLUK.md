@@ -6,6 +6,7 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ## 2026-11-09
 
+- **Çoklu site** (kullanıcı isteği: firmalar birden çok siteyi yönetiyor, çalışanlar bir ya da birkaç siteye bakıyor): `siteler` tablosu, her daire bir siteye bağlı (daire no site içinde tekil), kenar çubuğunda site seçici (Tüm siteler / site), bütün listeler, özet ve rapor site süzgeçli; personele site ataması (ataması yoksa tüm siteler), yetkisiz sitenin verisi sunucuda da verilmez. Gecikme mesajında site adı. Mevcut veriler "Ana Site"ye taşındı (göç 003). 18 test yeşil.
 - **Proje kuruldu** (kullanıcı kararı: kira ve düğün salonu ayrı ürün, satılık). Kaynak: müşterinin "Kira Takip Uygulaması rev05" Excel'inin iş mantığı.
 - Şema: daireler, sözleşmeler, aylık kira borçları, tahsilatlar + ödeme dağılımı, banka hareketleri, eşleşme kaydı.
 - Excel'deki hatalar düzeltildi: fazla ödeme kırpılmıyor (avans olup sonraki aya düşer); her ödeme ayrı kayıt; aynı ekstre iki kez yüklenince hareketler mükerrer girmez; ad eşleştirmesi tam kelime; gecikme durumu kendiliğinden güncel; ayrılan kiracının kira tutarı sıfırlanmıyor; T.C. kimlik no şifreli.

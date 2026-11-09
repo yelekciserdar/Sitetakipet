@@ -78,7 +78,7 @@ test('geçmiş dönem borcu elle oluşturulur, iki kez oluşturulsa da çift bor
   const g = (await p.get('/api/gecikenler')).veri;
   assert.equal(g.length, 1);
   assert.ok(g[0].geciken_tutar >= 60000);
-  assert.match(g[0].sms, /Sayın Mehmet Demir, A Blok 15 için (Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık) \d{4}/);
+  assert.match(g[0].sms, /Sayın Mehmet Demir, Ana Site A Blok 15 için (Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık) \d{4}/);
   assert.match(g[0].whatsapp, /^https:\/\/wa\.me\/905550000001\?text=/);
 });
 
@@ -279,7 +279,7 @@ test('özet ve rapor (CSV, formül enjeksiyonuna karşı korumalı)', async () =
   const ham = Buffer.from(await csv.arrayBuffer());
   assert.deepEqual([...ham.subarray(0, 3)], [0xef, 0xbb, 0xbf]); // Excel Türkçe karakterleri doğru açsın diye UTF-8 BOM
   const metin = ham.toString('utf8');
-  assert.ok(metin.startsWith('﻿Dönem;Blok;Daire;Kiracı'));
+  assert.ok(metin.startsWith('﻿Dönem;Site;Blok;Daire;Kiracı'));
   assert.ok(metin.includes(`"'=HYPERLINK(""x"")"`));
   assert.equal((await p.get(`/api/rapor?baslangic=${ay(-3)}&bitis=${ay(1)}`)).status, 403);
 });
@@ -319,4 +319,52 @@ test('hatalı girdiler 400 döner, sunucu hatası olmaz', async () => {
   assert.equal((await y.put('/api/ayarlar', { ad: 'X', gecikme_gun: 100, yaklasan_gun: 3, varsayilan_odeme_gunu: 5 })).status, 400);
   assert.equal((await y.get('/api/sozlesmeler/abc')).status, 400);
   assert.equal((await y.get('/api/rapor?baslangic=2026-05&bitis=2026-01')).status, 400);
+});
+
+test('çoklu site: aynı daire no farklı sitede açılır, site süzgeci, personelin site yetkisi sunucuda da uygulanır', async () => {
+  const ana = (await y.get('/api/siteler')).veri[0];
+  assert.equal(ana.ad, 'Ana Site');
+  const gunes = await y.post('/api/siteler', { ad: 'Güneş Sitesi', adres: 'Deneme Mah.' });
+  assert.equal(gunes.status, 200);
+  assert.equal((await y.post('/api/siteler', { ad: 'güneş sitesi' })).status, 409);
+  assert.equal((await p.post('/api/siteler', { ad: 'Yetkisiz' })).status, 403);
+  // İki aktif site varken site seçmeden daire eklenemez; aynı "A Blok 15" başka sitede açılabilir
+  assert.equal((await y.post('/api/daireler', { daire_no: '15', blok: 'A' })).status, 400);
+  const gd = await y.post('/api/daireler', { site_id: gunes.veri.id, daire_no: '15', blok: 'A' });
+  assert.equal(gd.status, 200);
+  const gs = await y.post('/api/sozlesmeler', { daire_id: gd.veri.id, baslangic: `${ay(-1)}-01`, aylik_kira: 10000, odeme_gunu: 1, kisi: { ad_soyad: 'Güneş Kiracı' } });
+  assert.equal(gs.status, 200);
+  assert.equal(gs.veri.site, 'Güneş Sitesi');
+  await y.post('/api/borclar/olustur', { donem: ay(-1) });
+  // Site süzgeci
+  const sadeceGunes = (await y.get(`/api/daireler?site_id=${gunes.veri.id}`)).veri;
+  assert.equal(sadeceGunes.length, 1);
+  assert.equal((await y.get(`/api/ozet?site_id=${gunes.veri.id}`)).veri.daire_toplam, 1);
+  assert.ok((await y.get(`/api/gecikenler?site_id=${gunes.veri.id}`)).veri.every((g) => g.site === 'Güneş Sitesi'));
+  assert.match((await y.get(`/api/gecikenler?site_id=${gunes.veri.id}`)).veri[0].sms, /Güneş Sitesi A Blok 15 için/);
+  // Personeli yalnız Güneş Sitesi'ne ata
+  const per = (await y.get('/api/kullanicilar')).veri.find((k) => k.eposta === 'personel@deneme.test');
+  assert.equal((await y.put(`/api/kullanicilar/${per.id}`, { site_idler: [gunes.veri.id] })).status, 200);
+  assert.deepEqual((await y.get('/api/kullanicilar')).veri.find((k) => k.id === per.id).site_idler, [gunes.veri.id]);
+  assert.deepEqual((await p.get('/api/ben')).veri.site_idler, [gunes.veri.id]);
+  assert.deepEqual((await p.get('/api/siteler')).veri.map((x) => x.ad), ['Güneş Sitesi']);
+  assert.ok((await p.get('/api/daireler')).veri.every((d) => d.site === 'Güneş Sitesi'));
+  assert.ok((await p.get('/api/sozlesmeler')).veri.every((d) => d.site === 'Güneş Sitesi'));
+  assert.ok((await p.get('/api/borclar')).veri.every((d) => d.site === 'Güneş Sitesi'));
+  assert.ok((await p.get('/api/kisiler')).veri.every((k) => k.ad_soyad !== 'Ayşe Kaya' && k.ad_soyad !== 'Mehmet Demir'));
+  assert.equal((await p.get('/api/ozet')).veri.daire_toplam, 1);
+  assert.equal((await p.get(`/api/daireler?site_id=${ana.id}`)).status, 403);
+  assert.equal((await p.get(`/api/sozlesmeler/${sozB}`)).status, 404);
+  assert.equal((await p.post('/api/tahsilatlar', { sozlesme_id: sozB, tarih: bugun(), tutar: 1 })).status, 404);
+  assert.equal((await p.post('/api/tahsilatlar', { sozlesme_id: gs.veri.id, tarih: bugun(), tutar: 10000 })).status, 200);
+  // Atama kaldırılınca bütün siteler yeniden görünür; yöneticiye atama yapılsa da her şeyi görür
+  await y.put(`/api/kullanicilar/${per.id}`, { site_idler: [] });
+  assert.equal((await p.get('/api/siteler')).veri.length, 2);
+  // Aktif kiracısı olan site pasif yapılamaz; başka firmanın sitesine daire eklenemez
+  assert.equal((await y.put(`/api/siteler/${gunes.veri.id}`, { ad: 'Güneş Sitesi', aktif: false })).status, 409);
+  await o.firma({ firma_ad: 'Üçüncü Firma', yonetici_ad: 'Üç', eposta: 'uc@deneme.test', parola: PAROLA });
+  const u = o.istemci();
+  await u.giris('uc@deneme.test', PAROLA);
+  assert.equal((await u.post('/api/daireler', { site_id: gunes.veri.id, daire_no: '1' })).status, 404);
+  assert.equal((await u.get('/api/siteler')).veri.length, 1);
 });
