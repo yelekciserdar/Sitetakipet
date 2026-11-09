@@ -1,0 +1,25 @@
+# Yerel deneme / tek sunucu kurulumu. .env dosyasında POSTGRES_PASSWORD ve VERI_ANAHTARI olmalı (depoya göndermeyin).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kiratakipet
+      POSTGRES_USER: kira
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env dosyasında olmalı}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://kira:${POSTGRES_PASSWORD}@db:5432/kiratakipet
+      PORT: 3000
+      VERI_ANAHTARI: ${VERI_ANAHTARI:?VERI_ANAHTARI .env dosyasında olmalı (openssl rand -base64 32)}
+      GUVENLI_CEREZ: ${GUVENLI_CEREZ:-0}
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - db
+    restart: unless-stopped
+volumes:
+  pgdata:
