@@ -1,0 +1,16 @@
+{
+  "name": "kiratakipet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KiraTakipEt: daire ve kira takibi için çok firmalı web yönetim sistemi",
+  "engines": { "node": ">=22.13 <25" },
+  "scripts": {
+    "start": "node server.js",
+    "migrate": "node scripts/migrate.js",
+    "firma:olustur": "node scripts/firma-olustur.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "pg": "8.23.0"
+  }
+}
