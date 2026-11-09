@@ -1,5 +1,5 @@
 'use strict';
-// KiraTakipEt arayüzü: dış kütüphane yok. Kullanıcı verisi yalnız textContent ile yazılır (innerHTML yok).
+// SiteTakipEt arayüzü: dış kütüphane yok. Kullanıcı verisi yalnız textContent ile yazılır (innerHTML yok).
 
 // ---------- Yardımcılar ----------
 const $ = (s, el = document) => el.querySelector(s);
@@ -142,8 +142,8 @@ const yonetici = () => durum.ben?.rol === 'yonetici';
 
 // ---------- Giriş ----------
 function logo() {
-  return h('div', { class: 'logo' }, h('span', { class: 'isaret' }, 'K'),
-    h('span', { class: 'yazi' }, h('span', { class: 'y-salon' }, 'Kira'), h('span', { class: 'y-takip' }, 'Takip'), h('span', { class: 'y-et' }, 'Et')));
+  return h('div', { class: 'logo' }, h('img', { class: 'isaret', src: '/logo-isaret.svg', alt: '' }),
+    h('span', { class: 'yazi' }, h('span', { class: 'y-ad' }, 'Site'), h('span', { class: 'y-takip' }, 'TakipEt')));
 }
 
 function girisEkrani() {
@@ -158,8 +158,8 @@ function girisEkrani() {
   $('#uygulama').replaceChildren(h('div', { class: 'giris-sayfa' },
     h('div', { class: 'giris-sol' }, logo(),
       h('div', null,
-        h('h2', null, 'Kiralar, kiracılar ve banka hareketleri tek ekranda.'),
-        h('p', null, 'Her ayın kira borcu kendiliğinden oluşur, banka ekstresindeki ödemeler kiracılarla eşleşir, geciken ödemeyi ilk gün görürsünüz.')),
+        h('h2', null, 'Siteler, daireler ve tahsilatlar tek ekranda.'),
+        h('p', null, 'Her ayın borcu kendiliğinden oluşur, banka ekstresindeki ödemeler dairelerle eşleşir, geciken ödemeyi ilk gün görürsünüz.')),
       h('div', { class: 'serit' }, h('span'), h('span'), h('span'))),
     h('div', { class: 'giris-sag' }, h('div', { class: 'giris-kutu' }, h('h1', null, 'Hoş geldiniz'), h('p', { class: 'soluk' }, 'Hesabınızla giriş yapın.'), form))));
 }

@@ -35,12 +35,9 @@ h2 { font-size: 17px; }
 h3 { font-size: 15px; }
 .yukleniyor { padding: 40px; text-align: center; color: var(--soluk); }
 
-/* ---- Logo (geçici yazı logo) ---- */
-.logo { font-weight: 800; font-size: 20px; letter-spacing: -.3px; color: #fff; display: flex; align-items: center; gap: 8px; }
-.logo .isaret { width: 30px; height: 30px; border-radius: 8px; background: var(--mavi); display: grid; place-items: center; font-size: 14px; color: #fff; }
-.logo .isaret::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--turuncu); margin: -14px -14px 0 0; position: absolute; }
-.logo .isaret { position: relative; }
-.logo em { font-style: normal; color: var(--turuncu); }
+/* ---- Logo: ev başlı anahtar simgesi + "Site" koyu, "TakipEt" mavi (turuncu yok) ---- */
+.logo { font-weight: 800; font-size: 20px; letter-spacing: -.3px; display: flex; align-items: center; gap: 10px; }
+.logo .isaret { width: 34px; height: 34px; border-radius: 9px; display: block; }
 
 /* ---- Giriş ---- */
 .giris-sayfa { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
@@ -50,7 +47,7 @@ h3 { font-size: 15px; }
 .giris-sol .serit { display: flex; gap: 8px; }
 .giris-sol .serit span { height: 6px; flex: 1; border-radius: 3px; background: rgba(255,255,255,.35); }
 .giris-sol .serit span:nth-child(1) { background: #fff; }
-.giris-sol .serit span:nth-child(2) { background: var(--turuncu); }
+.giris-sol .serit span:nth-child(2) { background: #FFD100; }
 .giris-sag { display: grid; place-items: center; padding: 24px; }
 .giris-kutu { width: 100%; max-width: 360px; }
 .giris-kutu h1 { margin-bottom: 6px; }
@@ -222,18 +219,14 @@ tr.iptal td { color: #A0A4B4; text-decoration: line-through; }
   .takvim-lejant { font-size: 12px; }
 }
 
-/* Açık zeminde (kenar çubuğu, telefon üst çubuğu) 'Salon' kömür renginde. */
-.kenar .logo .y-salon, .mobil-ust .logo .y-salon, .giris-kutu .logo .y-salon { color: var(--komur); }
-
-/* ---- Yazı logo: Salon (beyaz/kömür) + Takip (kraliyet mavisi) + Et (mandalina) ---- */
 .logo .yazi { letter-spacing: -.4px; }
-.logo .y-salon { color: #fff; }
-.giris-sol .logo .y-takip { color: #fff; }
-.giris-sol .logo .isaret { background: #fff; color: var(--mavi); }
+.logo .y-ad { color: var(--komur); }
 .logo .y-takip { color: var(--mavi); }
-.logo .y-et { color: var(--turuncu); }
-.logo.acik-zemin .y-salon { color: var(--komur); }
-.logo.acik-zemin .y-takip { color: var(--mavi); }
+/* Mavi giriş panelinde: simge beyaz çerçeveli, yazı beyaz ve açık mavi. */
+.giris-sol .logo { font-size: 24px; }
+.giris-sol .logo .isaret { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 0 0 2px rgba(255,255,255,.55), 0 6px 18px rgba(0,0,0,.18); }
+.giris-sol .logo .y-ad { color: #fff; }
+.giris-sol .logo .y-takip { color: #CFE0FF; }
 
 /* ---- KiraTakipEt'e özel ---- */
 .daire-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }

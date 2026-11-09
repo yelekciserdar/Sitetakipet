@@ -6,6 +6,7 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ## 2026-11-09
 
+- **SiteTakipEt logosu programa kondu (önizleme, onay bekliyor):** giriş ekranı, kenar çubuğu, telefon üst çubuğu ve sekme simgesi (`public/logo-isaret.svg`, `favicon.svg`); sayfa başlığı SiteTakipEt; yazı "Site" koyu + "TakipEt" mavi; giriş ekranı metni site yönetimine göre; giriş şeridindeki turuncu sarıya döndü.
 - Logo çalışması: ET simgesiyle aynı katlanmış kâğıt tarzında simgeler hazırlandı, önizleme gösterildi. Kullanıcı kararı: logolarda turuncu kullanılmaz; yazıda ürün adı koyu, "TakipEt" mavi. Karar DURUM.md'ye işlendi.
 - Logo: harf simgeleri yerine ürünü anlatan simge fikirleri çizildi; kullanıcı ev anahtarını seçti, renk uyumları gösterildi. Son hâl: ev başlı anahtar içinde sarı site blokları, kraliyet mavisi zemin.
 - **Ev sahibi** (kullanıcı: dairede kiracı değil ev sahibi de oturabilir): her daireye ev sahibi kartı (ad, telefon, e-posta, IBAN) bağlanır; oturum durumu Kiracılı / Ev sahibi / Boş. Ev sahibinin oturduğu daireye kira borcu yazılmaz, boş sayılmaz; kiraya verilince kendiliğinden Kiracılı olur. Panel, özet ve siteler tablosunda üç ayrı sayım; daire listesinde Oturan ve Ev sahibi sütunları (göç 004). 19 test yeşil.
