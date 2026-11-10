@@ -60,6 +60,7 @@ async function api(yontem, yol, govde) {
   let veri = null;
   try { veri = await r.json(); } catch { /* boş */ }
   if (r.status === 401 && yol !== '/api/giris') { durum.ben = null; girisEkrani(); throw new Error('Oturum kapandı, yeniden giriş yapın.'); }
+  if (r.status === 402 && veri?.deneme_bitti) { denemeBittiEkrani(); throw new Error(veri.hata); }
   if (!r.ok) throw new Error(veri?.hata || 'İşlem yapılamadı.');
   return veri;
 }
@@ -161,7 +162,63 @@ function girisEkrani() {
         h('h2', null, 'Siteler, daireler ve tahsilatlar tek ekranda.'),
         h('p', null, 'Her ayın borcu kendiliğinden oluşur, banka ekstresindeki ödemeler dairelerle eşleşir, geciken ödemeyi ilk gün görürsünüz.')),
       h('div', { class: 'serit' }, h('span'), h('span'), h('span'))),
-    h('div', { class: 'giris-sag' }, h('div', { class: 'giris-kutu' }, h('h1', null, 'Hoş geldiniz'), h('p', { class: 'soluk' }, 'Hesabınızla giriş yapın.'), form))));
+    h('div', { class: 'giris-sag' }, h('div', { class: 'giris-kutu' }, h('h1', null, 'Hoş geldiniz'), h('p', { class: 'soluk' }, 'Hesabınızla giriş yapın.'), form,
+      h('p', { class: 'giris-alt' }, 'Hesabınız yok mu? ', h('a', { href: '#/kayit', onclick: (e) => { e.preventDefault(); location.hash = '#/kayit'; kayitEkrani(); } }, '14 gün ücretsiz deneyin'))))));
+}
+
+// Kendi kendine deneme kaydı: formu doldurunca hesap açılır ve program hemen açılır.
+function kayitEkrani() {
+  const hataEl = h('div', { class: 'hata-yazi' });
+  const dugme = h('button', { class: 'dugme', type: 'submit' }, 'Deneme hesabımı aç');
+  dugme.style.width = '100%';
+  const form = h('form', { onsubmit: (e) => { e.preventDefault(); gonder(dugme, hataEl, async () => {
+    const v = formVerisi(form);
+    if (v.parola !== v.parola2) throw new Error('Parolalar aynı değil.');
+    delete v.parola2;
+    await api('POST', '/api/kayit', v);
+    location.hash = '#/panel';
+    await basla();
+    bildir('Deneme hesabınız açıldı. İyi çalışmalar!');
+  }); } },
+    h('div', { class: 'form' },
+      alan('Firma adı', metinGirdi('firma_ad', { required: true, maxlength: 200, placeholder: 'ör. Deneme Yönetim Hizmetleri', autocomplete: 'organization' }), true),
+      alan('Adınız soyadınız', metinGirdi('ad_soyad', { required: true, maxlength: 120, autocomplete: 'name' }), true),
+      alan('E-posta', h('input', { name: 'eposta', type: 'email', required: true, autocomplete: 'email' })),
+      alan('Telefon', h('input', { name: 'telefon', type: 'tel', required: true, inputmode: 'tel', autocomplete: 'tel', placeholder: '05xx xxx xx xx' })),
+      alan('Parola (en az 10 karakter)', h('input', { name: 'parola', type: 'password', required: true, minlength: 10, autocomplete: 'new-password' })),
+      alan('Parola (tekrar)', h('input', { name: 'parola2', type: 'password', required: true, minlength: 10, autocomplete: 'new-password' })),
+      h('input', { name: 'web_sitesi', type: 'text', tabindex: '-1', autocomplete: 'off', class: 'tuzak', 'aria-hidden': 'true' }),
+      h('label', { class: 'kutucuk tam' }, h('input', { type: 'checkbox', name: 'ornek', checked: true }), 'Örnek bir siteyle başla (8 daire, aidatlar ve giderler; sonra silebilir ya da değiştirebilirsiniz)'),
+      h('label', { class: 'kutucuk tam' }, h('input', { type: 'checkbox', name: 'kvkk', required: true }),
+        h('span', null, h('a', { href: 'https://sitetakipet.com.tr/gizlilik.html', target: '_blank', rel: 'noopener' }, 'Aydınlatma metnini'), ' okudum; deneme hesabının açılması için bilgilerimin işlenmesini kabul ediyorum.')),
+      h('div', { class: 'tam' }, hataEl, dugme)));
+  $('#uygulama').replaceChildren(h('div', { class: 'giris-sayfa' },
+    h('div', { class: 'giris-sol' }, logo(),
+      h('div', null,
+        h('h2', null, '14 gün ücretsiz deneyin.'),
+        h('p', null, 'Kart bilgisi istemiyoruz, kurulum yok. Hesabınız hemen açılır; aidat planını girin, ödemeleri alın, makbuz kesin, borçluları görün. Süre bitince verileriniz silinmez, satın aldığınızda kaldığınız yerden devam edersiniz.')),
+      h('div', { class: 'serit' }, h('span'), h('span'), h('span'))),
+    h('div', { class: 'giris-sag' }, h('div', { class: 'giris-kutu genis' }, h('h1', null, 'Deneme hesabı'), h('p', { class: 'soluk' }, 'Bilgilerinizi girin, programa hemen geçin.'), form,
+      h('p', { class: 'giris-alt' }, 'Hesabınız var mı? ', h('a', { href: '#/', onclick: (e) => { e.preventDefault(); location.hash = ''; girisEkrani(); } }, 'Giriş yapın'))))));
+}
+
+function satisBaglantisi(yazi) {
+  const tel = (durum.ben?.satis_telefon || '').replace(/\D/g, '').replace(/^0/, '90');
+  if (tel.length >= 11) return h('a', { class: 'dugme', href: `https://wa.me/${tel}?text=${encodeURIComponent(`Merhaba, SiteTakipEt'i satın almak istiyorum. Firma: ${durum.ben?.firma_ad || ''}`)}`, target: '_blank', rel: 'noopener' }, yazi);
+  return h('a', { class: 'dugme', href: 'https://sitetakipet.com.tr/#son', target: '_blank', rel: 'noopener' }, yazi);
+}
+function denemeBittiEkrani() {
+  $('#uygulama').replaceChildren(h('div', { class: 'giris-sayfa' },
+    h('div', { class: 'giris-sol' }, logo(), h('div', null, h('h2', null, 'Deneme süreniz doldu.'),
+      h('p', null, 'Girdiğiniz bütün site, daire, aidat ve ödeme kayıtları saklanıyor. Satın aldığınızda kaldığınız yerden devam edersiniz.')), h('div', { class: 'serit' }, h('span'), h('span'), h('span'))),
+    h('div', { class: 'giris-sag' }, h('div', { class: 'giris-kutu' }, h('h1', null, durum.ben?.firma_ad || 'SiteTakipEt'),
+      h('p', { class: 'soluk' }, 'Programı kullanmaya devam etmek için bize yazın.'), satisBaglantisi('Satın almak için yazın'),
+      h('p', { class: 'giris-alt' }, h('a', { href: '#/', onclick: (e) => { e.preventDefault(); cikis(); } }, 'Çıkış yap'))))));
+}
+function denemeSeridi() {
+  if (!durum.ben?.deneme_bitis) return null;
+  const kalan = Math.max(0, Math.ceil((new Date(durum.ben.deneme_bitis) - Date.now()) / 86400000));
+  return h('div', { class: 'deneme-serit' }, h('span', null, h('b', null, 'Deneme sürümü'), ` · ${kalan} gün kaldı. Verileriniz süre bitince de saklanır.`), satisBaglantisi('Satın al'));
 }
 
 // ---------- Yerleşim ----------
@@ -197,7 +254,7 @@ function yerlesim() {
       h('button', { onclick: cikis }, 'Çıkış yap')));
   $('#uygulama').replaceChildren(
     h('div', { class: 'mobil-ust' }, logo(), h('button', { 'aria-label': 'Menü', onclick: () => kenar.classList.toggle('acik') }, '☰')),
-    h('div', { class: 'yerlesim' }, kenar, h('main', { class: 'icerik', id: 'icerik' })));
+    h('div', { class: 'yerlesim' }, kenar, h('div', { class: 'icerik-kap' }, denemeSeridi(), h('main', { class: 'icerik', id: 'icerik' }))));
 }
 async function cikis() { await api('POST', '/api/cikis', {}).catch(() => {}); durum.ben = null; location.hash = ''; girisEkrani(); }
 
@@ -686,7 +743,8 @@ function siteFormu(x = null) {
 
 // ---------- Başlangıç ----------
 async function basla() {
-  try { durum.ben = await api('GET', '/api/ben'); } catch { return; }
+  try { durum.ben = await api('GET', '/api/ben'); } catch { if (location.hash.startsWith('#/kayit')) kayitEkrani(); return; }
+  if (durum.ben.deneme_bitti) { denemeBittiEkrani(); return; }
   durum.ayarlar = await api('GET', '/api/ayarlar').catch(() => null);
   await siteleriYukle();
   yerlesim();

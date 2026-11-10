@@ -305,3 +305,13 @@ tr.toplam td { border-top: 2px solid var(--yazi); }
 }
 @media (max-width: 860px) { .ozet-kutular:has(> div:nth-child(4)) { grid-template-columns: 1fr 1fr; } }
 td input[data-tur=sayi] { width: 100%; max-width: 160px; padding: 6px 8px; border: 1px solid var(--cizgi); border-radius: 6px; font: inherit; }
+
+/* ---- Deneme kaydı ---- */
+.giris-kutu.genis { max-width: 520px; }
+.giris-alt { margin-top: 18px; color: var(--soluk); font-size: 14px; }
+.giris-alt a { color: var(--mavi); font-weight: 600; }
+.tuzak { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.kutucuk a { color: var(--mavi); }
+.icerik-kap { min-width: 0; display: flex; flex-direction: column; }
+.deneme-serit { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #FFF6CC; border-bottom: 1px solid #F2DE7A; padding: 10px 28px; font-size: 14px; }
+.deneme-serit .dugme { padding: 6px 14px; font-size: 13px; }
