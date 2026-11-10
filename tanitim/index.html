@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SiteTakipEt | Site ve apartman yönetim programı</title>
+<meta name="description" content="Site yönetim programı: aylık aidat takibi, banka ekstresinden otomatik tahsilat eşleştirme, geciken aidat listesi, çoklu site ve isteğe bağlı kira takibi.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#F0F0F0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* SiteTakipEt tanıtım sayfası. Fikir: mimari maket; pencereler dairelerin aidat durumunu yakar. Fiş ve mühür tahsilat anını taşır. Turuncu yok: vurgu sarı #FFD100 (yazıda fosforlu kalem gibi). */
+:root {
+  --zemin: #F0F0F0;        /* marshmallow beyazı */
+  --maket: #FFFFFF;
+  --mavi: #105BFF;
+  --sari: #FFD100;
+  --sari-koyu: #8A6D00;   /* sarının açık zeminde okunur hâli */
+  --murekkep: #1F2129;     /* yazı: koyu nötr */
+  --soluk: #6A6E7C;
+  --cizgi: #DADADF;
+  --fis: #FBFAF7;
+  --f-baslik: "Syne", "Trebuchet MS", sans-serif;
+  --f-govde: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --f-fis: "Courier Prime", "Courier New", monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { overflow-x: clip; }
+body { margin: 0; background: var(--zemin); color: var(--murekkep); font-family: var(--f-govde); font-size: 17px; line-height: 1.6; overflow-x: clip; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+p { margin: 0; }
+h1, h2, h3 { margin: 0; font-family: var(--f-baslik); font-weight: 800; line-height: .98; letter-spacing: -0.035em; text-wrap: balance; }
+.ic { max-width: 1240px; margin: 0 auto; padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); }
+:focus-visible { outline: 2px solid var(--mavi); outline-offset: 3px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--zemin); }
+
+.serit { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: rgba(240,240,240,.88); backdrop-filter: blur(10px); }
+.serit .ic { display: flex; align-items: center; gap: 18px; padding-block: 14px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--f-govde); font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+.isaret { width: 36px; height: 36px; border-radius: 10px; display: block; }
+.logo .t { color: var(--mavi); }
+.serit .giris-bag { font-weight: 700; font-size: 15px; text-decoration: none; color: var(--murekkep); }
+.serit .giris-bag:hover { color: var(--mavi); }
+.serit nav { margin-left: auto; display: flex; gap: 24px; font-size: 15px; font-weight: 600; color: var(--soluk); }
+.serit nav a { text-decoration: none; } .serit nav a:hover { color: var(--murekkep); }
+.dugme { display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 999px; font-weight: 700; text-decoration: none; background: var(--murekkep); color: #fff; transition: transform .15s, background .2s; }
+.dugme:hover { transform: translateY(-1px); background: var(--mavi); }
+.dugme.mavi { background: var(--mavi); } .dugme.mavi:hover { background: var(--murekkep); }
+
+/* MAKET (giriş) */
+.giris { position: relative; }
+.sahne { position: relative; height: min(720px, 86vh); min-height: 560px; }
+#maket { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.giris-yazi { position: absolute; inset: 0; pointer-events: none; }
+.giris-yazi .ic { height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-block: 40px 36px; }
+.giris h1 { font-size: clamp(40px, 5.6vw, 84px); max-width: 7.2em; }
+.giris h1 .m { color: var(--mavi); }
+.giris h1 .o, .o { background: linear-gradient(transparent 58%, var(--sari) 58%, var(--sari) 92%, transparent 92%); padding: 0 .06em; }
+.giris .alt-satir { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
+.giris .alt-satir p { max-width: 420px; font-size: 18px; color: #3C3F4A; pointer-events: auto; }
+.giris .alt-satir .dugme { pointer-events: auto; }
+.olcer { pointer-events: auto; background: rgba(255,255,255,.86); backdrop-filter: blur(8px); border-radius: 18px; padding: 16px 18px; display: grid; gap: 8px; min-width: 260px; box-shadow: 0 20px 40px -24px rgba(31,33,41,.35); }
+.olcer .bas { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--soluk); display: flex; justify-content: space-between; gap: 14px; }
+.olcer .bas b { color: var(--murekkep); }
+.olcer .s { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; font-size: 15px; font-variant-numeric: tabular-nums; }
+.olcer .s i { width: 12px; height: 12px; border-radius: 3px; background: var(--r); }
+.olcer .s b { font-size: 18px; font-weight: 700; }
+.cubuk { height: 8px; border-radius: 999px; background: #E6E6EA; overflow: hidden; display: flex; }
+.cubuk span { height: 100%; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
+/* EKSTRE: fiş yazıcı + mühür */
+.ekstre { padding-block: 110px 80px; }
+.ekstre .ic { display: grid; grid-template-columns: 420px 1fr; gap: 70px; align-items: start; }
+.yazici { position: relative; }
+.agiz { height: 22px; background: var(--murekkep); border-radius: 12px 12px 4px 4px; position: relative; z-index: 2; box-shadow: 0 10px 20px -10px rgba(0,0,0,.4); }
+.agiz::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 5px; height: 4px; border-radius: 4px; background: #000; }
+.fis { margin: -6px 18px 0; background: var(--fis); padding: 26px 22px 30px; font-family: var(--f-fis); font-size: 14px; color: #2D2A25; position: relative; box-shadow: 0 30px 50px -30px rgba(31,33,41,.35); min-height: 470px;
+  -webkit-mask: linear-gradient(#000, #000) top / 100% calc(100% - 10px) no-repeat, radial-gradient(circle 7px at 7px 100%, transparent 6px, #000 7px) bottom / 14px 10px repeat-x;
+  mask: linear-gradient(#000, #000) top / 100% calc(100% - 10px) no-repeat, radial-gradient(circle 7px at 7px 100%, transparent 6px, #000 7px) bottom / 14px 10px repeat-x; }
+.fis .ust { text-align: center; border-bottom: 1px dashed #B9B2A6; padding-bottom: 10px; margin-bottom: 10px; }
+.fis .ust b { font-size: 16px; letter-spacing: .1em; }
+.fis-satir { display: grid; grid-template-columns: 46px 1fr auto; gap: 8px; padding: 7px 0; border-bottom: 1px dotted #D6D0C5; position: relative; animation: bas .45s steps(6) both; }
+@keyframes bas { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.fis-satir .tutar { font-weight: 700; }
+.muhur { position: absolute; right: -8px; top: -6px; font-family: var(--f-baslik); font-weight: 800; font-size: 15px; letter-spacing: .04em; padding: 2px 8px; border: 3px solid currentColor; border-radius: 6px; transform: rotate(-9deg); background: rgba(251,250,247,.6); animation: vur .35s cubic-bezier(.3,1.7,.5,1) both; }
+.muhur.odendi { color: var(--mavi); } .muhur.kontrol { color: var(--sari-koyu); } .muhur.degil { color: #8E8A82; }
+@keyframes vur { from { transform: rotate(-9deg) scale(2.2); opacity: 0; } to { transform: rotate(-9deg) scale(1); opacity: 1; } }
+.ekstre h2 { font-size: clamp(38px, 4.6vw, 70px); }
+.ekstre h2 .m { color: var(--mavi); }
+.ekstre .aciklama { margin-top: 18px; max-width: 560px; color: #3C3F4A; font-size: 18px; }
+.puanlar { margin-top: 40px; display: grid; gap: 0; }
+.puan { display: grid; grid-template-columns: 120px 1fr; align-items: baseline; gap: 18px; padding: 16px 0; border-top: 1px solid var(--cizgi); }
+.puan:last-child { border-bottom: 1px solid var(--cizgi); }
+.puan b { font-family: var(--f-govde); font-weight: 800; font-size: 44px; color: var(--mavi); letter-spacing: -0.04em; }
+.puan span { font-size: 17px; }
+.puan small { display: block; color: var(--soluk); font-size: 14.5px; }
+.esik { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; font-size: 14.5px; }
+.esik span { padding: 8px 14px; border-radius: 999px; background: var(--maket); border: 1px solid var(--cizgi); }
+.esik span b { color: var(--mavi); } .esik span:nth-child(2) b { color: var(--sari-koyu); }
+
+/* GECİKME: telefon */
+.gecikme { padding-block: 60px 100px; }
+.gecikme .ic { display: grid; grid-template-columns: 1fr 380px; gap: 70px; align-items: center; }
+.gecikme h2 { font-size: clamp(38px, 4.6vw, 70px); }
+.gecikme .aciklama { margin-top: 18px; max-width: 520px; color: #3C3F4A; font-size: 18px; }
+.gun-sayaci { margin-top: 30px; display: flex; align-items: baseline; gap: 14px; }
+.gun-sayaci b { font-family: var(--f-govde); font-weight: 800; font-size: 110px; line-height: .8; color: var(--murekkep); text-decoration: underline 10px var(--sari); text-underline-offset: 10px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.gun-sayaci span { font-size: 18px; font-weight: 600; max-width: 180px; }
+.telefon { background: var(--murekkep); border-radius: 42px; padding: 12px; box-shadow: 0 50px 80px -40px rgba(31,33,41,.6); transform: rotate(3deg); }
+.ekran-ic { background: #ECE5DD; border-radius: 32px; overflow: hidden; height: 500px; display: flex; flex-direction: column; }
+.wa-ust { background: #075E54; color: #fff; padding: 36px 16px 12px; display: flex; gap: 10px; align-items: center; }
+.wa-ust i { width: 36px; height: 36px; border-radius: 50%; background: #CFD8DC; display: grid; place-items: center; font-style: normal; color: #37474F; font-weight: 700; }
+.wa-ust small { display: block; opacity: .75; font-size: 12px; }
+.wa-govde { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 10px; justify-content: flex-end; }
+.balon { max-width: 86%; padding: 9px 11px 6px; border-radius: 10px; font-size: 14px; line-height: 1.45; box-shadow: 0 1px 1px rgba(0,0,0,.12); }
+.balon.giden { align-self: flex-end; background: #DCF8C6; border-top-right-radius: 2px; }
+.balon.gelen { align-self: flex-start; background: #fff; border-top-left-radius: 2px; }
+.balon small { display: block; text-align: right; color: #7A8A80; font-size: 11px; margin-top: 2px; }
+.imlec { display: inline-block; width: 7px; height: 15px; background: #075E54; vertical-align: -2px; animation: yanip .8s steps(2) infinite; }
+@keyframes yanip { 50% { opacity: 0; } }
+
+/* KAT: etkileşimli */
+.kat { padding-block: 40px 100px; }
+.kat-ust { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
+.kat h2 { font-size: clamp(38px, 4.6vw, 70px); }
+.kat .ipucu { color: var(--soluk); font-weight: 600; }
+.kat-govde { margin-top: 36px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: stretch; }
+.cephe { background: var(--maket); border-radius: 26px; padding: 28px; box-shadow: 0 30px 60px -40px rgba(31,33,41,.45); display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.daire { border: 0; cursor: pointer; border-radius: 16px; min-height: 140px; padding: 14px; text-align: left; font: inherit; display: flex; flex-direction: column; justify-content: space-between; background: #F4F4F6; color: var(--murekkep); transition: background .35s, color .35s, transform .2s, box-shadow .2s; position: relative; overflow: hidden; }
+.daire:hover { transform: translateY(-3px); box-shadow: 0 16px 30px -18px rgba(31,33,41,.5); }
+.daire b { font-family: var(--f-baslik); font-size: 22px; letter-spacing: -0.03em; }
+.daire span { font-size: 13.5px; font-weight: 700; }
+.daire::after { content: ""; position: absolute; right: 14px; top: 14px; width: 26px; height: 34px; border-radius: 4px; border: 2px solid currentColor; opacity: .35; }
+.daire.odendi { background: var(--mavi); color: #fff; }
+.daire.gecikti { background: var(--sari); color: var(--murekkep); }
+.daire.sahip { background: var(--murekkep); color: #fff; }
+.daire.secili { outline: 3px solid var(--murekkep); outline-offset: 3px; }
+.daire.secili.sahip { outline-color: var(--mavi); }
+.bilgi { background: var(--murekkep); color: #fff; border-radius: 26px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+.bilgi small { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #9EA2B2; font-weight: 700; }
+.bilgi h3 { font-size: 40px; }
+.bilgi ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.bilgi li { padding-left: 24px; position: relative; color: #DADCE4; }
+.bilgi li::before { content: ""; position: absolute; left: 0; top: .55em; width: 10px; height: 10px; border-radius: 3px; background: var(--sari); }
+.durum-sec { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.durum-sec button { font: inherit; font-size: 14px; font-weight: 700; border-radius: 999px; padding: 8px 14px; border: 1px solid #3A3D4A; background: transparent; color: #fff; cursor: pointer; }
+.durum-sec button[aria-pressed="true"] { background: #fff; color: var(--murekkep); }
+
+/* EKRAN: gerçek program */
+.gercek { padding-block: 40px 90px; }
+.gercek h2 { font-size: clamp(38px, 4.6vw, 70px); }
+.gercek h2 .m { color: var(--mavi); }
+.gercek .aciklama { margin-top: 14px; color: #3C3F4A; max-width: 560px; font-size: 18px; }
+.masa { margin-top: 44px; perspective: 1800px; }
+.pano-ekran { border-radius: 18px; background: var(--maket); padding: 10px; box-shadow: 0 70px 120px -60px rgba(31,33,41,.6); transform: rotateX(16deg) rotateZ(-2deg) scale(.95); transform-origin: 50% 100%; will-change: transform; }
+.pano-ekran img { width: 100%; height: auto; display: block; border-radius: 10px; }
+
+/* SON */
+.son { padding-block: 30px 40px; }
+.son-blok { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: end; padding-top: 60px; border-top: 2px solid var(--murekkep); }
+.son h2 { font-size: clamp(44px, 6vw, 96px); }
+.son h2 .m { color: var(--mavi); }
+.son .sag { display: grid; gap: 18px; }
+.son .sag p { font-size: 18px; color: #3C3F4A; }
+.alt-bilgi { margin-top: 70px; padding-block: 26px; border-top: 1px solid var(--cizgi); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--soluk); }
+.alt-bilgi a { color: var(--murekkep); font-weight: 700; text-decoration: none; }
+
+@media (max-width: 960px) {
+  .ekstre .ic, .gecikme .ic, .kat-govde, .son-blok { grid-template-columns: 1fr; }
+  .gecikme .telefon { max-width: 360px; }
+  .serit nav, .serit .giris-bag { display: none; }
+  .sahne { height: 640px; }
+  .giris .alt-satir { align-items: stretch; }
+}
+@media (max-width: 560px) {
+  .cephe { grid-template-columns: repeat(2, 1fr); padding: 16px; gap: 10px; }
+  .daire { min-height: 110px; }
+  .puan { grid-template-columns: 80px 1fr; } .puan b { font-size: 34px; }
+  .gun-sayaci b { font-size: 84px; }
+  .olcer { min-width: 0; width: 100%; }
+  .sahne { height: 700px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="serit" lang="tr">
+  <div class="ic">
+    <a class="logo" href="#"><img class="isaret" src="logo-isaret.svg" alt="" width="36" height="36"><span>Site<span class="t">TakipEt</span></span></a>
+    <nav aria-label="Sayfa içi"><a href="#ekstre">Banka ekstresi</a><a href="#gecikme">Gecikmeler</a><a href="#kat">Daireler</a></nav>
+    <a class="giris-bag" href="https://panel.sitetakipet.com.tr/">Giriş yap</a>
+    <a class="dugme" href="#son">Ücretsiz deneyin</a>
+  </div>
+</header>
+
+<main lang="tr">
+  <section class="giris">
+    <div class="sahne">
+      <canvas id="maket" aria-label="Üç boyutlu site maketi: pencereler dairelerin aidat durumunu gösteriyor"></canvas>
+      <div class="giris-yazi">
+        <div class="ic">
+          <h1>Bütün siteniz,<br><span class="m">tek bakışta</span> <span class="o">tahsil.</span></h1>
+          <div class="alt-satir">
+            <p>SiteTakipEt her ayın aidatını dairelere kendisi yazar, banka ekstresindeki havaleleri dairelerle eşleştirir, geciken aidatı ilk gün gösterir.</p>
+            <div class="olcer" aria-live="polite">
+              <div class="bas"><span>Güneş Sitesi · Kasım</span><b id="o-oran">%0</b></div>
+              <div class="cubuk"><span id="c-o" style="background: var(--mavi); width: 0"></span><span id="c-b" style="background: #C9D8FF; width: 0"></span><span id="c-g" style="background: var(--sari); width: 0"></span></div>
+              <div class="s"><i style="--r: var(--mavi)"></i><span>Ödendi</span><b id="o-o">0</b></div>
+              <div class="s"><i style="--r: #C9D8FF"></i><span>Bekliyor</span><b id="o-b">0</b></div>
+              <div class="s"><i style="--r: var(--sari)"></i><span>Gecikti</span><b id="o-g">0</b></div>
+              <div class="s"><i style="--r: var(--murekkep)"></i><span>Boş daire</span><b id="o-s">0</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ekstre" id="ekstre">
+    <div class="ic">
+      <div class="yazici" aria-label="Örnek banka ekstresi fişi">
+        <div class="agiz"></div>
+        <div class="fis" id="fis">
+          <div class="ust"><b>BANKA EKSTRESİ</b><br>KASIM 2026 · GELEN HAVALELER</div>
+        </div>
+      </div>
+      <div>
+        <h2>Ekstreyi yükleyin,<br><span class="m">mührü sistem vursun.</span></h2>
+        <p class="aciklama">Bankanızdan indirdiğiniz XLSX ya da CSV dosyasındaki her havale, dairelerle karşılaştırılıp puanlanır. Aynı ekstreyi iki kez yükleseniz de hiçbir aidat iki kez ödenmiş görünmez.</p>
+        <div class="puanlar">
+          <div class="puan"><b>+40</b><span>Açıklama kodu<small>Sakinin havaleye yazdığı "A15" gibi daire kodu.</small></span></div>
+          <div class="puan"><b>+40</b><span>IBAN<small>Gönderen hesap, malikin ya da kiracının kayıtlı IBAN'ı.</small></span></div>
+          <div class="puan"><b>+30</b><span>Ad soyad<small>Tam kelime olarak; "Ali" adı "Aliye"yle eşleşmez.</small></span></div>
+          <div class="puan"><b>+30</b><span>Tutar<small>Aylık aidat ya da açık borçla aynı.</small></span></div>
+          <div class="puan"><b>+20</b><span>Dönem<small>Vadeye yakın ya da aynı ay.</small></span></div>
+        </div>
+        <div class="esik"><span><b>80+</b> tek aday: otomatik işlenir</span><span><b>50–79</b>: sizin onayınızı bekler</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gecikme" id="gecikme">
+    <div class="ic">
+      <div>
+        <h2>Geciken aidatı<br><span class="o">ilk gün</span> görün.</h2>
+        <p class="aciklama">Vadesi geçen her aidat sarıya döner. Sakine gidecek hatırlatma; tutar, dönem ve gün sayısıyla hazır. Kopyalayın ya da tek dokunuşla WhatsApp'ta açın.</p>
+        <div class="gun-sayaci"><b id="gun">0</b><span>gündür ödenmeyen aidat, listenin en üstünde</span></div>
+      </div>
+      <div class="telefon" aria-label="Örnek WhatsApp mesajı">
+        <div class="ekran-ic">
+          <div class="wa-ust"><i>AY</i><div><b>Ali Yıldız</b><small>A Blok 3 · sakin</small></div></div>
+          <div class="wa-govde" id="wa"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="kat" id="kat">
+    <div class="ic">
+      <div class="kat-ust">
+        <h2>Her daire, kendi<br>hikâyesiyle.</h2>
+        <p class="ipucu">Bir daireye dokunun →</p>
+      </div>
+      <div class="kat-govde">
+        <div class="cephe" id="cephe"></div>
+        <div class="bilgi" aria-live="polite">
+          <small id="bi-daire">B Blok · Daire 4</small>
+          <h3 id="bi-baslik">Aidatı ödendi</h3>
+          <ul id="bi-liste"></ul>
+          <div class="durum-sec" id="durum-sec" role="group" aria-label="Dairenin durumunu değiştir"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gercek">
+    <div class="ic">
+      <h2>Ve işte <span class="m">programın kendisi.</span></h2>
+      <p class="aciklama">Panel ekranı, iki siteyi yöneten örnek bir firmanın verisiyle. Kenardan site seçilir; daireler ödeme durumuna göre renklenir.</p>
+      <div class="masa"><div class="pano-ekran" id="pano-ekran"><img src="ekran-site.jpg" alt="SiteTakipEt panel ekranı" width="1280" height="760" loading="lazy"></div></div>
+    </div>
+  </section>
+
+  <section class="son" id="son">
+    <div class="ic">
+      <div class="son-blok">
+        <h2>Bu ayın aidatları<br><span class="m">kendiliğinden</span><br><span class="o">yerine otursun.</span></h2>
+        <div class="sag">
+          <p>Sitelerinizi ve dairelerinizi birlikte girelim, ilk ekstrenizi beraber eşleştirelim. Excel listeniz varsa onu da aktarırız. Kiralık daireleriniz varsa kira takibi bölümü de hazır.</p>
+          <a class="dugme mavi" href="https://envantertakipet.com.tr/#iletisim">Ücretsiz deneyin →</a>
+        </div>
+      </div>
+      <div class="alt-bilgi">
+        <span>SiteTakipEt · Bir <a href="https://envantertakipet.com.tr/">EnvanterTakipEt</a> ürünü</span>
+        <span><a href="https://panel.sitetakipet.com.tr/">Programa giriş</a></span>
+        <span>© 2026</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(() => {
+  const azHareket = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const RENK = { odendi: 0x105BFF, bekliyor: 0xC9D8FF, gecikti: 0xFFD100, sahip: 0x1F2129, bos: 0xE4E4E8 };
+
+  // ---------- 3B site maketi ----------
+  const tuval = document.getElementById('maket');
+  const pencereler = [];
+  function olcerGuncelle() {
+    const say = { odendi: 0, bekliyor: 0, gecikti: 0, sahip: 0 };
+    pencereler.forEach((p) => { if (say[p.durum] !== undefined) say[p.durum]++; });
+    const kiralik = say.odendi + say.bekliyor + say.gecikti;
+    document.getElementById('o-o').textContent = say.odendi;
+    document.getElementById('o-b').textContent = say.bekliyor;
+    document.getElementById('o-g').textContent = say.gecikti;
+    document.getElementById('o-s').textContent = say.sahip;
+    document.getElementById('o-oran').textContent = '%' + Math.round(say.odendi / kiralik * 100) + ' tahsil';
+    document.getElementById('c-o').style.width = (say.odendi / kiralik * 100) + '%';
+    document.getElementById('c-b').style.width = (say.bekliyor / kiralik * 100) + '%';
+    document.getElementById('c-g').style.width = (say.gecikti / kiralik * 100) + '%';
+  }
+  let tohum = 3; const r = () => (tohum = (tohum * 9301 + 49297) % 233280) / 233280;
+  const ilkDurum = () => { const x = r(); return x < .58 ? 'odendi' : x < .78 ? 'bekliyor' : x < .9 ? 'gecikti' : 'sahip'; };
+
+  if (window.THREE && (() => { try { return !!document.createElement('canvas').getContext('webgl'); } catch { return false; } })()) {
+    const T = THREE;
+    const renderer = new T.WebGLRenderer({ canvas: tuval, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+    const sahne = new T.Scene(); sahne.background = new T.Color(0xF0F0F0);
+    const kamera = new T.OrthographicCamera(-10, 10, 10, -10, -100, 200);
+    sahne.add(new T.HemisphereLight(0xffffff, 0xDADAE2, .85));
+    const gunes = new T.DirectionalLight(0xffffff, .75); gunes.position.set(14, 22, 10); gunes.castShadow = true;
+    gunes.shadow.mapSize.set(2048, 2048); Object.assign(gunes.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20 });
+    gunes.shadow.radius = 4; sahne.add(gunes);
+    const zemin = new T.Mesh(new T.PlaneGeometry(80, 80), new T.ShadowMaterial({ opacity: .12 }));
+    zemin.rotation.x = -Math.PI / 2; zemin.receiveShadow = true; sahne.add(zemin);
+    const grup = new T.Group(); sahne.add(grup);
+    const levha = new T.Mesh(new T.BoxGeometry(17, .4, 13), new T.MeshStandardMaterial({ color: 0xFFFFFF, roughness: .9 }));
+    levha.position.y = -.2; levha.receiveShadow = true; grup.add(levha);
+    const yol = new T.Mesh(new T.BoxGeometry(17, .02, 1.6), new T.MeshStandardMaterial({ color: 0xE8E8EC }));
+    yol.position.set(0, .01, .4); grup.add(yol);
+    const beyaz = new T.MeshStandardMaterial({ color: 0xFFFFFF, roughness: .75 });
+    const pencereGeo = new T.BoxGeometry(.62, .62, .08);
+    function blok(x, z, gen, der, kat) {
+      const h = kat * 1.05 + .4;
+      const g = new T.Mesh(new T.BoxGeometry(gen, h, der), beyaz); g.position.set(x, h / 2, z); g.castShadow = true; g.receiveShadow = true; grup.add(g);
+      const cati = new T.Mesh(new T.BoxGeometry(gen + .2, .18, der + .2), beyaz); cati.position.set(x, h + .09, z); cati.castShadow = true; grup.add(cati);
+      const onSayi = Math.floor(gen / 1.05); const yanSayi = Math.floor(der / 1.05);
+      for (let k = 0; k < kat; k++) {
+        const y = .75 + k * 1.05;
+        for (let i = 0; i < onSayi; i++) pencereEkle(x - gen / 2 + (gen / onSayi) * (i + .5), y, z + der / 2 + .03, 0);
+        for (let i = 0; i < yanSayi; i++) pencereEkle(x + gen / 2 + .03, y, z - der / 2 + (der / yanSayi) * (i + .5), Math.PI / 2);
+      }
+    }
+    function pencereEkle(x, y, z, ry) {
+      const durum = ilkDurum();
+      const m = new T.MeshStandardMaterial({ color: RENK[durum], emissive: RENK[durum], emissiveIntensity: durum === 'sahip' ? 0 : .18, roughness: .4 });
+      const p = new T.Mesh(pencereGeo, m); p.position.set(x, y, z); p.rotation.y = ry; grup.add(p);
+      pencereler.push({ mesh: p, durum, hedef: new T.Color(RENK[durum]) });
+    }
+    blok(-4.6, -2.2, 4.2, 4.2, 7);
+    blok(1.2, -3.2, 3.2, 3.2, 10);
+    blok(5.4, 1.6, 3.2, 3.2, 5);
+    blok(-4.2, 3.8, 3.2, 2.2, 3);
+    // Ağaçlar
+    const yesil = new T.MeshStandardMaterial({ color: 0xDCE6FF, roughness: 1 });
+    [[1.6, 3.6], [2.6, 4.6], [-1, 4.2], [7.2, -3.8], [-7.2, 0.6]].forEach(([x, z]) => {
+      const a = new T.Mesh(new T.SphereGeometry(.55, 16, 12), yesil); a.position.set(x, .75, z); a.castShadow = true; grup.add(a);
+    });
+    olcerGuncelle();
+
+    let aci = -.62; let kaydirmaAci = 0;
+    function boyut() {
+      const w = tuval.clientWidth, h = tuval.clientHeight;
+      renderer.setSize(w, h, false);
+      const oran = w / h; const yakin = w < 700 ? 15 : 11.5;
+      kamera.left = -yakin * oran; kamera.right = yakin * oran; kamera.top = yakin; kamera.bottom = -yakin;
+      kamera.updateProjectionMatrix();
+      grup.position.x = w < 960 ? 0 : 9; grup.position.y = w < 960 ? -6 : -2.5;
+    }
+    boyut(); addEventListener('resize', boyut);
+    const gecici = new T.Color();
+    function ciz() {
+      if (!azHareket) aci += .0016;
+      const a = aci + kaydirmaAci;
+      kamera.position.set(Math.sin(a) * 30, 22, Math.cos(a) * 30); kamera.lookAt(0, 2, 0);
+      for (const p of pencereler) {
+        gecici.copy(p.mesh.material.color).lerp(p.hedef, .08);
+        p.mesh.material.color.copy(gecici); p.mesh.material.emissive.copy(gecici);
+      }
+      renderer.render(sahne, kamera);
+      requestAnimationFrame(ciz);
+    }
+    ciz();
+    addEventListener('scroll', () => { kaydirmaAci = Math.min(scrollY, 900) / 900 * .9; }, { passive: true });
+    // Ay içinde ödemeler gelir: bekleyen ve geciken pencereler maviye döner; ay dönünce yeni borçlar bekler
+    function degistir(p, d) { p.durum = d; p.hedef.set(RENK[d]); p.mesh.material.emissiveIntensity = d === 'sahip' ? 0 : .18; }
+    if (!azHareket) setInterval(() => {
+      const acik = pencereler.filter((p) => p.durum === 'bekliyor' || p.durum === 'gecikti');
+      if (acik.length < 6) pencereler.forEach((p) => { if (p.durum === 'odendi' && r() < .45) degistir(p, r() < .8 ? 'bekliyor' : 'gecikti'); });
+      else degistir(acik[Math.floor(r() * acik.length)], 'odendi');
+      olcerGuncelle();
+    }, 650);
+  } else {
+    for (let i = 0; i < 120; i++) pencereler.push({ durum: ilkDurum() });
+    olcerGuncelle();
+    tuval.style.background = 'radial-gradient(circle at 70% 60%, #fff, #F0F0F0 60%)';
+  }
+
+  // ---------- Fiş yazıcı ----------
+  const SATIR = [
+    ['01.11', 'AIDAT A1 M.DEMIR', '1.850', 'odendi', 'ÖDENDİ 100'],
+    ['02.11', 'HAVALE Z.ARSLAN', '1.850', 'odendi', 'ÖDENDİ 90'],
+    ['03.11', 'MASRAF IADESI', '45', 'degil', 'AİDAT DEĞİL'],
+    ['05.11', 'AIDAT B3 H.POLAT', '1.400', 'kontrol', 'KONTROL 75'],
+    ['06.11', 'AIDAT A2 A.KAYA', '3.700', 'odendi', 'ÖDENDİ 110'],
+    ['08.11', 'EFT S.KURT AIDAT', '1.850', 'odendi', 'ÖDENDİ 80'],
+    ['09.11', 'HAVALE D.ERDEM', '1.600', 'kontrol', 'KONTROL 50'],
+  ];
+  const fis = document.getElementById('fis');
+  let fisAdim = 0, fisZaman = null;
+  function fisBas(hepsi) {
+    const ekle = (s) => {
+      const el = document.createElement('div'); el.className = 'fis-satir';
+      const t = document.createElement('span'); t.textContent = s[0];
+      const a = document.createElement('span'); a.textContent = s[1];
+      const tu = document.createElement('span'); tu.className = 'tutar'; tu.textContent = s[2];
+      el.append(t, a, tu); fis.append(el);
+      setTimeout(() => { const m = document.createElement('span'); m.className = 'muhur ' + s[3]; m.textContent = s[4]; el.append(m); }, hepsi ? 0 : 520);
+    };
+    if (hepsi) { SATIR.forEach(ekle); return; }
+    ekle(SATIR[fisAdim++]);
+    if (fisAdim >= SATIR.length) { clearInterval(fisZaman); setTimeout(() => { fis.querySelectorAll('.fis-satir').forEach((x) => x.remove()); fisAdim = 0; fisZaman = setInterval(() => fisBas(false), 1100); }, 5000); }
+  }
+  if (azHareket) fisBas(true);
+  else {
+    SATIR.slice(0, 3).forEach(() => fisBas(false)); // durgun ilk görünümde fiş boş kalmasın
+    new IntersectionObserver((g, o) => { if (g[0].isIntersecting) { fisZaman = setInterval(() => fisBas(false), 1100); o.disconnect(); } }, { threshold: .3 }).observe(fis);
+  }
+
+  // ---------- WhatsApp yazımı ve gün sayacı ----------
+  const MESAJ = 'Sayın Ali Yıldız, Güneş Sitesi A Blok 3 için Ekim 2026 dönemine ait 1.850,00 TL aidat ödemeniz 30 gündür gecikmiştir. Ödemenizi en kısa sürede yapmanızı rica ederiz. Güneş Sitesi Yönetimi';
+  const wa = document.getElementById('wa');
+  function balon(sinif, metin, saat) {
+    const b = document.createElement('div'); b.className = 'balon ' + sinif;
+    const m = document.createElement('span'); m.textContent = metin;
+    const s = document.createElement('small'); s.textContent = saat;
+    b.append(m, s); wa.append(b); return m;
+  }
+  function sohbet() {
+    wa.replaceChildren();
+    const m = balon('giden', '', '10:02 ✓✓');
+    if (azHareket) { m.textContent = MESAJ; balon('gelen', 'Merhaba, akşam havale ediyorum. Kusura bakmayın.', '10:14'); return; }
+    let i = 0; const imlec = document.createElement('span'); imlec.className = 'imlec'; m.after(imlec);
+    const t = setInterval(() => {
+      m.textContent = MESAJ.slice(0, i += 3);
+      if (i >= MESAJ.length) { clearInterval(t); imlec.remove(); setTimeout(() => balon('gelen', 'Merhaba, akşam havale ediyorum. Kusura bakmayın.', '10:14'), 1200); setTimeout(sohbet, 7000); }
+    }, 40);
+  }
+  const gunEl = document.getElementById('gun');
+  let sohbetBasladi = false;
+  new IntersectionObserver((g) => {
+    if (!g[0].isIntersecting || sohbetBasladi) return; sohbetBasladi = true; sohbet();
+    let n = 0; const t = setInterval(() => { gunEl.textContent = ++n; if (n >= 30) clearInterval(t); }, azHareket ? 0 : 45);
+  }, { threshold: .3 }).observe(document.getElementById('gecikme'));
+  gunEl.textContent = '30'; // durgun görünüm
+  if (!azHareket) gunEl.textContent = '0';
+
+  // ---------- Etkileşimli kat ----------
+  const DURUMLAR = {
+    odendi: ['Aidatı ödendi', ['Kasım aidatı ödemenin geldiği gün işlendi.', 'Fazla ödeme sonraki aya avans olarak düşer.', 'Daire kartında bütün ödeme geçmişi saklı.']],
+    gecikti: ['Aidatı gecikti', ['Vadeden sonra sarıya döndü (süre ayarlanabilir).', 'Gecikenler listesinde tutar ve gün sayısıyla en üstte.', 'Hazır hatırlatma: kopyala ya da WhatsApp\'ta aç.']],
+    sahip: ['Kat maliki oturuyor', ['Aidat malikin adına yazılır.', 'Malikin adı, telefonu ve IBAN\'ı kayıtlı.', 'Daire kiraya verilince oturan kiracı olarak değişir.']],
+    bos: ['Boş daire', ['Aidat yine yazılır, malikten istenir.', 'Yeni sakin iki dakikada eklenir.', 'Doluluk panelde ayrı sayılır.']],
+  };
+  const ETIKET = { odendi: 'Ödendi', gecikti: 'Gecikti', sahip: 'Malik', bos: 'Boş' };
+  const daireler = [['1', 'odendi'], ['2', 'gecikti'], ['3', 'odendi'], ['4', 'odendi'], ['5', 'sahip'], ['6', 'bos']];
+  const cephe = document.getElementById('cephe');
+  let secili = 3;
+  const dugmeler = daireler.map(([no, d], i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'daire ' + d;
+    const ad = document.createElement('b'); ad.textContent = 'Daire ' + no;
+    const s = document.createElement('span'); s.textContent = ETIKET[d];
+    b.append(ad, s); b.addEventListener('click', () => sec(i)); cephe.append(b); return b;
+  });
+  const secim = document.getElementById('durum-sec');
+  const secDugmeleri = Object.keys(DURUMLAR).map((k) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = ETIKET[k];
+    b.addEventListener('click', () => { daireler[secili][1] = k; sec(secili); }); secim.append(b); return [k, b];
+  });
+  function sec(i) {
+    secili = i; const [no, d] = daireler[i];
+    dugmeler.forEach((b, j) => { b.className = 'daire ' + daireler[j][1] + (j === i ? ' secili' : ''); b.lastChild.textContent = ETIKET[daireler[j][1]]; });
+    document.getElementById('bi-daire').textContent = 'B Blok · Daire ' + no;
+    document.getElementById('bi-baslik').textContent = DURUMLAR[d][0];
+    const ul = document.getElementById('bi-liste'); ul.replaceChildren(...DURUMLAR[d][1].map((t) => { const li = document.createElement('li'); li.textContent = t; return li; }));
+    secDugmeleri.forEach(([k, b]) => b.setAttribute('aria-pressed', String(k === d)));
+  }
+  sec(secili);
+
+  // ---------- Kaydırma: gerçek ekran doğrulur, başlıklar süzülür ----------
+  if (window.gsap && window.ScrollTrigger && !azHareket) {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.fromTo('#pano-ekran', { rotateX: 16, rotateZ: -2, scale: .95 }, { rotateX: 0, rotateZ: 0, scale: 1, ease: 'none', scrollTrigger: { trigger: '.masa', start: 'top 90%', end: 'center 55%', scrub: .5 } });
+    gsap.from('.giris h1', { y: 40, duration: 1, ease: 'power3.out' });
+    gsap.utils.toArray('.puan').forEach((p, i) => gsap.from(p, { x: 40, duration: .6, delay: i * .06, ease: 'power2.out', scrollTrigger: { trigger: p, start: 'top 88%' } }));
+    gsap.from('.telefon', { y: 80, rotate: 10, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: '.gecikme', start: 'top 70%' } });
+  } else {
+    document.getElementById('pano-ekran').style.transform = 'none';
+  }
+})();
+</script>
+</body>
+</html>

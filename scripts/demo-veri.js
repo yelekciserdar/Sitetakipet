@@ -8,6 +8,7 @@ const kr = require('../lib/kira');
 const bk = require('../lib/banka');
 const st = require('../lib/site');
 
+const SAHIPLER = ['Kemal Ateş', 'Sevgi Yurt', 'Orhan Bal', 'Leyla Gök', 'Murat Can', 'Hülya Deniz'];
 const LALE = ['Tuğba Er', 'Cem Kara', 'Nur Şen', 'Ozan Tan', 'Ebru Ak', 'Sinan Işık'];
 const ADLAR = ['Mehmet Demir', 'Ayşe Kaya', 'Ali Yıldız', 'Fatma Şahin', 'Mustafa Çelik', 'Zeynep Arslan', 'Emre Koç', 'Elif Aydın',
   'Burak Öztürk', 'Selin Kurt', 'Hasan Polat', 'Merve Doğan', 'Can Aksoy', 'Derya Erdem', 'Onur Güneş', 'Gizem Tekin', 'Kaan Uçar', 'Buse Yalçın', 'Serkan Avcı', 'İrem Bulut'];
@@ -29,7 +30,10 @@ function gun(donem, g) { const son = new Date(Date.UTC(+donem.slice(0, 4), +done
       const daireler = [];
       for (const blok of ['A', 'B']) {
         for (let i = 1; i <= 12; i++) {
-          const d = await kr.daireEkle(c, ctx, { site_id: f.site_id, blok, daire_no: String(i), kat: String(Math.ceil(i / 4)), oda: ['2+1', '3+1', '1+1'][i % 3], metrekare: [95, 120, 65][i % 3], tip: i === 1 ? 'İşyeri' : 'Konut' });
+          const sahibiOturuyor = blok === 'B' && i >= 11;
+          const sahip = i % 3 === 0 || sahibiOturuyor ? { ad_soyad: SAHIPLER[(i + (blok === 'B' ? 3 : 0)) % SAHIPLER.length], telefon: `0533 000 00 ${String(10 + i)}` } : undefined;
+          const d = await kr.daireEkle(c, ctx, { site_id: f.site_id, blok, daire_no: String(i), kat: String(Math.ceil(i / 4)), oda: ['2+1', '3+1', '1+1'][i % 3], metrekare: [95, 120, 65][i % 3], tip: i === 1 ? 'İşyeri' : 'Konut',
+            ev_sahibi: sahip, ev_sahibi_oturuyor: sahibiOturuyor });
           daireler.push(d.id);
         }
       }
@@ -58,7 +62,8 @@ function gun(donem, g) { const son = new Date(Date.UTC(+donem.slice(0, 4), +done
       // İkinci site: Lale Apartmanı (blok yok, 8 daire, 6 kiracı)
       const lale = await st.siteEkle(c, ctx, { ad: 'Lale Apartmanı', adres: 'Deneme Mah. Lale Sok. No 5' });
       for (let i = 1; i <= 8; i++) {
-        const d = await kr.daireEkle(c, ctx, { site_id: lale.id, daire_no: String(i), kat: String(Math.ceil(i / 2)), oda: '2+1', metrekare: 90 });
+        const d = await kr.daireEkle(c, ctx, { site_id: lale.id, daire_no: String(i), kat: String(Math.ceil(i / 2)), oda: '2+1', metrekare: 90,
+          ev_sahibi: i === 7 ? { ad_soyad: 'Gülay Şimşek', telefon: '0533 000 00 77' } : undefined, ev_sahibi_oturuyor: i === 7 });
         if (i > LALE.length) continue;
         const kira = 12000 + i * 1000;
         const so = await kr.sozlesmeEkle(c, ctx, { daire_id: d.id, baslangic: gun(ay(-3), 1), aylik_kira: kira, odeme_gunu: 5,

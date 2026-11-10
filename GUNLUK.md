@@ -4,8 +4,17 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ---
 
+## 2026-11-10
+
+- **Canlı kurulum betiği** (`sunucu/`): `kur.sh` (kontrol / kur / ci-anahtar / sertifika) SiteTakipEt'i EnvanterTakipEt sunucusuna ayrı `sitetakip` kullanıcısıyla kurar: PostgreSQL veritabanı ve rastgele parola, `VERI_ANAHTARI` sunucuda üretilir, PM2 (127.0.0.1:3003), nginx (sitetakipet.com.tr → `tanitim/`, panel. → program), 15 dakikalık yerel yedek ve gece şifreli Drive kopyası. `guncelle.sh` + `.github/workflows/canli.yml`: main'e birleştirmede otomatik güncelleme (önce yedek, açılmazsa geri dönüş). Yedek betikleri EnvanterTakipEt'ten. Program artık `HOST` ayarıyla yalnız 127.0.0.1'i dinleyebiliyor. Deneme sunucusunda kurulum, nginx üzerinden sayfa ve sağlık kontrolü, yedek, güncelleme ve geri dönüş provası geçti. Sunucuda henüz bir şey yapılmadı; adımlar `sunucu/KURULUM.md`.
+
 ## 2026-11-09
 
+- **Tanıtım sayfası** (`tanitim/`): KiraTakipEt maket sayfası SiteTakipEt'e uyarlandı: aidat dili, yeni logo ve sekme simgesi, "Giriş yap" bağlantısı (panel.sitetakipet.com.tr), turuncu yerine sarı vurgu (yazıda fosforlu kalem çizgisi), telefonda yatay taşma kırpıldı. Önizleme gösterildi.
+- **SiteTakipEt logosu programa kondu (önizleme, onay bekliyor):** giriş ekranı, kenar çubuğu, telefon üst çubuğu ve sekme simgesi (`public/logo-isaret.svg`, `favicon.svg`); sayfa başlığı SiteTakipEt; yazı "Site" koyu + "TakipEt" mavi; giriş ekranı metni site yönetimine göre; giriş şeridindeki turuncu sarıya döndü.
+- Logo çalışması: ET simgesiyle aynı katlanmış kâğıt tarzında simgeler hazırlandı, önizleme gösterildi. Kullanıcı kararı: logolarda turuncu kullanılmaz; yazıda ürün adı koyu, "TakipEt" mavi. Karar DURUM.md'ye işlendi.
+- Logo: harf simgeleri yerine ürünü anlatan simge fikirleri çizildi; kullanıcı ev anahtarını seçti, renk uyumları gösterildi. Son hâl: ev başlı anahtar içinde sarı site blokları, kraliyet mavisi zemin.
+- **Ev sahibi** (kullanıcı: dairede kiracı değil ev sahibi de oturabilir): her daireye ev sahibi kartı (ad, telefon, e-posta, IBAN) bağlanır; oturum durumu Kiracılı / Ev sahibi / Boş. Ev sahibinin oturduğu daireye kira borcu yazılmaz, boş sayılmaz; kiraya verilince kendiliğinden Kiracılı olur. Panel, özet ve siteler tablosunda üç ayrı sayım; daire listesinde Oturan ve Ev sahibi sütunları (göç 004). 19 test yeşil.
 - **Çoklu site** (kullanıcı isteği: firmalar birden çok siteyi yönetiyor, çalışanlar bir ya da birkaç siteye bakıyor): `siteler` tablosu, her daire bir siteye bağlı (daire no site içinde tekil), kenar çubuğunda site seçici (Tüm siteler / site), bütün listeler, özet ve rapor site süzgeçli; personele site ataması (ataması yoksa tüm siteler), yetkisiz sitenin verisi sunucuda da verilmez. Gecikme mesajında site adı. Mevcut veriler "Ana Site"ye taşındı (göç 003). 18 test yeşil.
 - **Proje kuruldu** (kullanıcı kararı: kira ve düğün salonu ayrı ürün, satılık). Kaynak: müşterinin "Kira Takip Uygulaması rev05" Excel'inin iş mantığı.
 - Şema: daireler, sözleşmeler, aylık kira borçları, tahsilatlar + ödeme dağılımı, banka hareketleri, eşleşme kaydı.
