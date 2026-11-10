@@ -138,11 +138,12 @@ EOF
   saglikli && ok "Program calisiyor: 127.0.0.1:$port" || die "Program acilmadi. Bakmak icin: sudo -u $u -H $node_bin/pm2 logs $pm2_name --lines 50"
   # 7) nginx: önce yalnız HTTP; sertifikayı "sertifika" adımı ekler.
   if [ ! -f "$nginx_conf" ]; then
+    v6=''; [ -s /proc/net/if_inet6 ] && v6='listen [::]:80;'
     cat >"$nginx_conf" <<EOF
 # SiteTakipEt (sunucu/kur.sh yazdi). Sertifika satirlarini certbot ekler.
 server {
     listen 80;
-    listen [::]:80;
+    $v6
     server_name $alan www.$alan;
     root $app/tanitim;
     index index.html;
@@ -155,7 +156,7 @@ server {
 }
 server {
     listen 80;
-    listen [::]:80;
+    $v6
     server_name panel.$alan;
     client_max_body_size 12m;
     location / {
@@ -172,7 +173,7 @@ server {
 EOF
     ln -sf "$nginx_conf" /etc/nginx/sites-enabled/sitetakipet
     if nginx -t 2>/dev/null; then systemctl reload nginx; ok 'nginx ayari yazildi ve yuklendi (HTTP)'
-    else rm -f /etc/nginx/sites-enabled/sitetakipet; die 'nginx ayari hatali; geri alindi, mevcut siteler etkilenmedi. "nginx -t" ciktisini Claude ile paylasin.'; fi
+    else rm -f /etc/nginx/sites-enabled/sitetakipet "$nginx_conf"; die 'nginx ayari hatali; geri alindi, mevcut siteler etkilenmedi. "nginx -t" ciktisini Claude ile paylasin.'; fi
   fi
   # 8) Yedek: her 15 dk yerel, her gece 03:40 şifreli Drive (EnvanterTakipEt 03:30'da; çakışmasın).
   install -d -m 700 -o "$u" -g "$u" "$backup_dir"
