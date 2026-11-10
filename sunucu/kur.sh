@@ -37,7 +37,7 @@ as_u() { runuser -u "$u" -- env HOME="$h" USER="$u" LOGNAME="$u" PATH="$PATH" "$
 as_pg() { runuser -u postgres -- "$@"; }
 saglikli() {
   i=0
-  while [ "$i" -lt 30 ]; do
+  while [ "$i" -lt "${1:-30}" ]; do
     if curl -fsS -m 3 "http://127.0.0.1:$port/api/saglik" 2>/dev/null | grep -q '"durum":"ok"'; then return 0; fi
     i=$((i + 1)); sleep 1
   done
@@ -64,7 +64,7 @@ denetle() {
   [ -f "$env_file" ] && ok "Ayar dosyasi $env_file" || say "  [ ] Ayar dosyasi yok (kur adiminda uretilir)"
   as_pg psql -tAc "SELECT 1 FROM pg_database WHERE datname='$db'" 2>/dev/null | grep -q 1 && ok "Veritabani $db var" || say "  [ ] Veritabani $db yok (kur adiminda acilir)"
   [ -f "$nginx_conf" ] && ok "nginx ayari $nginx_conf" || say "  [ ] nginx ayari yok (kur adiminda yazilir)"
-  if saglikli 2>/dev/null; then ok "Program yanit veriyor (127.0.0.1:$port)"; else say "  [ ] Program yanit vermiyor"; fi
+  if saglikli 1; then ok "Program yanit veriyor (127.0.0.1:$port)"; else say "  [ ] Program yanit vermiyor"; fi
   [ -f /etc/nginx/conf.d/cloudflare-gercek-ip.conf ] && ok 'Cloudflare gercek IP ayari var (EnvanterTakipEt ile ortak)' || warn 'Cloudflare gercek IP ayari yok; giris kilidi icin onerilir (EnvanterTakipEt DURUM.md, 20 Ekim).'
   [ -f /home/envanter/.config/rclone/rclone.conf ] && ok 'EnvanterTakipEt rclone ayari bulundu (uzak yedek icin kopyalanacak)' || warn 'rclone ayari bulunamadi; uzak (Drive) yedek sonra kurulur.'
   return $sorun
