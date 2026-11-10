@@ -22,10 +22,13 @@ db=${KUR_VERITABANI:-sitetakipet}
 port=${KUR_PORT:-3003}
 node_bin=${KUR_NODE_BIN:-/opt/node-v22.23.4/bin}
 pm2_name=sitetakipet
+# SiteTakipEt'in kendi PM2'si (EnvanterTakipEt'in PM2'sinden bağımsız; ona dokunmaz).
+pm2_dir=${KUR_PM2_DIR:-/opt/pm2-sitetakip}
+pm2_surum=${KUR_PM2_SURUM:-6}
 backup_dir=/var/backups/sitetakipet
 alan=sitetakipet.com.tr
 nginx_conf=/etc/nginx/sites-available/sitetakipet
-PATH=$node_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PATH=$node_bin:$pm2_dir/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 cd /
 
@@ -51,7 +54,7 @@ denetle() {
   say 'Denetim:'
   sorun=0
   [ -x "$node_bin/node" ] && ok "Node $("$node_bin/node" -v) ($node_bin)" || { warn "Node bulunamadi: $node_bin"; sorun=1; }
-  [ -x "$node_bin/pm2" ] && ok 'PM2 kurulu' || { warn "PM2 bulunamadi ($node_bin/pm2). Kurmak icin: $node_bin/npm install -g pm2"; sorun=1; }
+  [ -x "$pm2_dir/bin/pm2" ] && ok "PM2 kurulu ($pm2_dir)" || say "  [ ] PM2 yok (kur adiminda $pm2_dir altina kurulur; EnvanterTakipEt'in PM2'sine dokunulmaz)"
   command -v psql >/dev/null && as_pg psql -tAc 'SELECT 1' >/dev/null 2>&1 && ok "PostgreSQL calisiyor (kapi $(as_pg psql -tAc 'SHOW port'))" || { warn 'PostgreSQL calismiyor ya da yok.'; sorun=1; }
   command -v nginx >/dev/null && ok 'nginx kurulu' || { warn 'nginx yok.'; sorun=1; }
   command -v certbot >/dev/null && ok 'certbot kurulu' || warn 'certbot yok; "sertifika" adiminda kurulur (apt install certbot python3-certbot-nginx).'
@@ -127,15 +130,20 @@ cd $app
 exec $node_bin/node server.js
 EOF
   chown "$u:$u" "$basla"; chmod 700 "$basla"
+  if [ ! -x "$pm2_dir/bin/pm2" ]; then
+    "$node_bin/npm" install -g --prefix "$pm2_dir" --no-audit --no-fund "pm2@$pm2_surum" >/dev/null
+    chmod -R a+rX "$pm2_dir"
+    ok "PM2 kuruldu: $pm2_dir"
+  fi
   (cd "$app" && as_u npm ci --omit=dev --no-audit --no-fund >/dev/null) && ok 'Paketler kuruldu'
   # 6) PM2 (açılışta kendiliğinden başlar). Program açılırken veritabanı göçlerini kendisi uygular.
   if as_u pm2 describe "$pm2_name" >/dev/null 2>&1; then as_u pm2 restart "$pm2_name" >/dev/null
   else as_u pm2 start "$basla" --name "$pm2_name" --interpreter sh >/dev/null; fi
   as_u pm2 save >/dev/null
   if ! systemctl is-enabled "pm2-$u" >/dev/null 2>&1; then
-    pm2 startup systemd -u "$u" --hp "$h" >/dev/null && ok "Acilista baslatma: pm2-$u servisi"
+    "$pm2_dir/bin/pm2" startup systemd -u "$u" --hp "$h" >/dev/null && ok "Acilista baslatma: pm2-$u servisi"
   fi
-  saglikli && ok "Program calisiyor: 127.0.0.1:$port" || die "Program acilmadi. Bakmak icin: sudo -u $u -H $node_bin/pm2 logs $pm2_name --lines 50"
+  saglikli && ok "Program calisiyor: 127.0.0.1:$port" || die "Program acilmadi. Bakmak icin: sudo -u $u -H $pm2_dir/bin/pm2 logs $pm2_name --lines 50"
   # 7) nginx: önce yalnız HTTP; sertifikayı "sertifika" adımı ekler.
   if [ ! -f "$nginx_conf" ]; then
     v6=''; [ -s /proc/net/if_inet6 ] && v6='listen [::]:80;'

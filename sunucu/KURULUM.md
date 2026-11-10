@@ -7,7 +7,7 @@ Program, EnvanterTakipEt ile aynı sunucuda ayrı bir kullanıcıyla (`sitetakip
 |---|---|
 | Kod | `/home/sitetakip/sitetakipet` (GitHub'dan, yalnız okunur) |
 | Ayarlar ve gizli anahtarlar | `/home/sitetakip/sitetakipet.env` (yalnız `sitetakip` okur) |
-| Program | PM2 süreci `sitetakipet`, `127.0.0.1:3003`; açılışta `pm2-sitetakip` servisi başlatır |
+| Program | PM2 süreci `sitetakipet`, `127.0.0.1:3003`; açılışta `pm2-sitetakip` servisi başlatır. PM2'nin kendi kopyası `/opt/pm2-sitetakip` (EnvanterTakipEt'inkine dokunmaz) |
 | Tanıtım sayfası | `sitetakipet.com.tr`, `www.` → `tanitim/` klasörü (nginx) |
 | Program adresi | `panel.sitetakipet.com.tr` → `127.0.0.1:3003` (nginx) |
 | Yedek | Her 15 dk `/var/backups/sitetakipet` (7 gün), her gece 03:40 şifreli Drive `gdrive-sifreli:sitetakipet` |
@@ -87,7 +87,7 @@ Firma adı, yönetici adı ve e-postayı kendi bilgilerinizle değiştirin; paro
 
 ## Sorun olursa
 
-- Program günlüğü: `sudo -u sitetakip -H /opt/node-v22.23.4/bin/pm2 logs sitetakipet --lines 50`
+- Program günlüğü: `sudo -u sitetakip -H /opt/pm2-sitetakip/bin/pm2 logs sitetakipet --lines 50`
 - Durum: `sudo sh /home/sitetakip/sitetakipet/sunucu/kur.sh kontrol`
 - Yedek durumu: `sudo cat /var/backups/sitetakipet/STATUS.txt`
 - Elle geri dönüş: GitHub → Actions → "Canli site guncelleme" → Run workflow → `surum: onceki`.
