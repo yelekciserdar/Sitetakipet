@@ -166,15 +166,21 @@ function girisEkrani() {
 
 // ---------- Yerleşim ----------
 const SAYFALAR = [
-  { yol: 'panel', ad: 'Panel', simge: '▦', ciz: panelSayfasi },
-  { yol: 'daireler', ad: 'Daireler', simge: '⌂', ciz: dairelerSayfasi },
-  { yol: 'kiracilar', ad: 'Kiracılar', simge: '☺', ciz: kiracilarSayfasi },
-  { yol: 'kira-takibi', ad: 'Kira Takibi', simge: '₺', ciz: kiraTakibiSayfasi },
-  { yol: 'gecikenler', ad: 'Gecikenler', simge: '!', ciz: gecikenlerSayfasi },
-  { yol: 'banka', ad: 'Banka Ekstresi', simge: '⇅', ciz: bankaSayfasi, yonetici: true },
-  { yol: 'raporlar', ad: 'Raporlar', simge: '▤', ciz: raporlarSayfasi, yonetici: true },
+  { yol: 'panel', ad: 'Panel', simge: '▦', ciz: (i) => aidatPanelSayfasi(i) },
+  { yol: 'daireler', ad: 'Daireler', simge: '⌂', ciz: (i) => dairelerSayfasi(i) },
+  { yol: 'aidat', ad: 'Aidat Takibi', simge: '₺', ciz: (i) => aidatTakibiSayfasi(i) },
+  { yol: 'borclular', ad: 'Borçlular', simge: '!', ciz: (i) => borclularSayfasi(i) },
+  { yol: 'giderler', ad: 'Giderler', simge: '−', ciz: (i) => giderlerSayfasi(i) },
+  { yol: 'gelir-gider', ad: 'Gelir-Gider', simge: '▤', ciz: (i) => gelirGiderSayfasi(i), yonetici: true },
+  { yol: 'aidat-plani', ad: 'Aidat Planı', simge: '%', ciz: (i) => aidatPlaniSayfasi(i), yonetici: true },
+  { yol: 'kiracilar', ad: 'Kiracılar', simge: '☺', ciz: kiracilarSayfasi, kira: true },
+  { yol: 'kira-takibi', ad: 'Kira Takibi', simge: '₺', ciz: kiraTakibiSayfasi, kira: true },
+  { yol: 'gecikenler', ad: 'Geciken Kiralar', simge: '!', ciz: gecikenlerSayfasi, kira: true },
+  { yol: 'banka', ad: 'Banka Ekstresi', simge: '⇅', ciz: bankaSayfasi, yonetici: true, kira: true },
+  { yol: 'raporlar', ad: 'Kira Raporu', simge: '▤', ciz: raporlarSayfasi, yonetici: true, kira: true },
   { yol: 'ayarlar', ad: 'Ayarlar', simge: '⚙', ciz: ayarlarSayfasi, yonetici: true },
 ];
+const sayfaGorunur = (p) => (!p.yonetici || yonetici()) && (!p.kira || kiraAcik());
 
 function yerlesim() {
   const aktifSiteler = durum.siteler.filter((x) => x.aktif);
@@ -183,8 +189,10 @@ function yerlesim() {
       h('option', { value: '' }, 'Tüm siteler'),
       aktifSiteler.map((x) => h('option', { value: x.id, selected: x.id === durum.siteId }, x.ad)))) : null;
   const kenar = h('aside', { class: 'kenar' }, logo(), siteSecici,
-    h('nav', null, SAYFALAR.filter((p) => !p.yonetici || yonetici()).map((p) =>
-      h('a', { href: '#/' + p.yol, 'data-yol': p.yol, onclick: () => kenar.classList.remove('acik') }, h('span', { class: 'simge' }, p.simge), p.ad))),
+    h('nav', null, SAYFALAR.filter(sayfaGorunur).flatMap((p, i, l) => [
+      p.kira && !l[i - 1]?.kira ? h('div', { class: 'nav-grup' }, 'Kira bölümü') : null,
+      !p.kira && l[i - 1]?.kira ? h('div', { class: 'nav-grup' }) : null,
+      h('a', { href: '#/' + p.yol, 'data-yol': p.yol, onclick: () => kenar.classList.remove('acik') }, h('span', { class: 'simge' }, p.simge), p.ad)])),
     h('div', { class: 'alt' }, h('b', null, durum.ben.firma_ad), h('span', null, `${durum.ben.ad_soyad} · ${yonetici() ? 'Yönetici' : 'Personel'}`), h('br'),
       h('button', { onclick: cikis }, 'Çıkış yap')));
   $('#uygulama').replaceChildren(
@@ -196,7 +204,7 @@ async function cikis() { await api('POST', '/api/cikis', {}).catch(() => {}); du
 async function yonlendir() {
   if (!durum.ben) return;
   const yol = (location.hash.replace(/^#\//, '') || 'panel').split('?')[0];
-  const sayfa = SAYFALAR.find((p) => p.yol === yol && (!p.yonetici || yonetici())) || SAYFALAR[0];
+  const sayfa = SAYFALAR.find((p) => p.yol === yol && sayfaGorunur(p)) || SAYFALAR[0];
   document.querySelectorAll('.kenar nav a').forEach((a) => a.classList.toggle('aktif', a.dataset.yol === sayfa.yol));
   const icerik = $('#icerik');
   icerik.replaceChildren(h('p', { class: 'yukleniyor' }, 'Yükleniyor…'));
@@ -300,12 +308,12 @@ function daireFormu(d = null) {
     alan('Tip', secimGirdi('tip', ['Konut', 'İşyeri', 'Depo', 'Diğer'], d?.tip || 'Konut')),
     alan('Adres / açıklama', metinGirdi('adres', { value: d?.adres, maxlength: 500 }), true),
     alan('Not', h('textarea', { name: 'notlar', rows: 2, maxlength: 2000 }, d?.notlar || ''), true),
-    h('h3', { class: 'tam' }, 'Ev sahibi'),
-    alan('Ad soyad', metinGirdi('es_ad_soyad', { value: d?.ev_sahibi_ad, maxlength: 120, placeholder: 'Boş bırakılırsa ev sahibi kaydı tutulmaz' })),
+    h('h3', { class: 'tam' }, 'Kat maliki (ev sahibi)'),
+    alan('Ad soyad', metinGirdi('es_ad_soyad', { value: d?.ev_sahibi_ad, maxlength: 120, placeholder: 'Boş bırakılırsa malik kaydı tutulmaz' })),
     alan('Telefon', metinGirdi('es_telefon', { value: d?.ev_sahibi_telefon, inputmode: 'tel', maxlength: 30 })),
     alan('E-posta', h('input', { type: 'email', name: 'es_eposta', value: d?.ev_sahibi_eposta, maxlength: 200 })),
     alan('IBAN', metinGirdi('es_iban', { value: d?.ev_sahibi_iban, maxlength: 40, placeholder: 'TR..' })),
-    !d?.sozlesme_id ? h('label', { class: 'kutucuk tam' }, h('input', { type: 'checkbox', name: 'ev_sahibi_oturuyor', checked: d?.ev_sahibi_oturuyor }), 'Dairede ev sahibi oturuyor (kira borcu yazılmaz)')
+    !d?.sozlesme_id ? h('label', { class: 'kutucuk tam' }, h('input', { type: 'checkbox', name: 'ev_sahibi_oturuyor', checked: d?.ev_sahibi_oturuyor }), kiraAcik() ? 'Dairede malik oturuyor (kira borcu yazılmaz)' : 'Dairede malik oturuyor')
       : h('p', { class: 'tam soluk' }, 'Dairede kiracı oturuyor.'),
     d ? h('label', { class: 'kutucuk tam' }, h('input', { type: 'checkbox', name: 'aktif', checked: d.aktif }), 'Aktif (kullanılan daireler arasında)') : null,
   ], async (v) => {
@@ -630,6 +638,8 @@ async function ayarlarSayfasi(icerik) {
       alan('Vadeden kaç gün sonra "Gecikti" sayılsın', h('input', { type: 'number', name: 'gecikme_gun', min: 0, max: 60, value: a.gecikme_gun, 'data-tur': 'sayi' })),
       alan('Vadeye kaç gün kala "yaklaşan" uyarısı', h('input', { type: 'number', name: 'yaklasan_gun', min: 0, max: 60, value: a.yaklasan_gun, 'data-tur': 'sayi' })),
       alan('Yeni kiracıda varsayılan ödeme günü', h('input', { type: 'number', name: 'varsayilan_odeme_gunu', min: 1, max: 31, value: a.varsayilan_odeme_gunu, 'data-tur': 'sayi' })),
+      h('label', { class: 'kutucuk tam' }, h('input', { type: 'checkbox', name: 'kira_modulu', checked: a.kira_modulu }),
+        'Kira bölümü (kiralık dairelerin kira takibi: kiracılar, aylık kira, geciken kiralar, banka ekstresi)'),
       h('div', { class: 'tam' }, hataEl, dugme)));
     govde = h('div', { class: 'kart' }, form);
   } else if (sekme === 'kullanicilar') {
@@ -684,3 +694,329 @@ async function basla() {
 }
 window.addEventListener('hashchange', yonlendir);
 basla();
+
+// =====================================================================
+// ---------- Aidat (site yönetimi) ----------
+// =====================================================================
+const kiraAcik = () => !!durum.ayarlar?.kira_modulu;
+const GIDER_KATEGORILERI = ['Elektrik', 'Su', 'Doğalgaz', 'Temizlik', 'Güvenlik', 'Bakım-Onarım', 'Asansör', 'Bahçe', 'Personel', 'Sigorta',
+  'Yönetim Ücreti', 'Kırtasiye', 'Banka Masrafı', 'Diğer'];
+const kpiKutu = (ad, deger, renk, alt) => h('div', { class: 'kpi ' + renk }, h('div', { class: 'ad' }, ad), h('div', { class: 'deger' }, deger), alt ? h('div', { class: 'soluk' }, alt) : null);
+const siteAdi = () => (durum.siteId ? durum.siteler.find((x) => x.id === durum.siteId)?.ad : null);
+const tekSiteId = () => durum.siteId || (durum.siteler.filter((x) => x.aktif).length === 1 ? durum.siteler.find((x) => x.aktif).id : null);
+
+// Panel: bu ayın aidatı, borçlular, kasa; daireler aidat durumuna göre renklenir.
+async function aidatPanelSayfasi(icerik) {
+  const [o, daireler, acik] = await Promise.all([
+    api('GET', '/api/aidat/ozet' + siteP('?')), api('GET', '/api/daireler' + siteP('?')), api('GET', '/api/aidat/borclar?durum=Açık' + siteP())]);
+  const borc = new Map();
+  for (const b of acik) {
+    const x = borc.get(b.daire_id) || { kalan: 0, geciken: 0, gun: 0 };
+    x.kalan += b.kalan; if (b.durum === 'Gecikti') { x.geciken += b.kalan; x.gun = Math.max(x.gun, b.gecikme_gun); }
+    borc.set(b.daire_id, x);
+  }
+  const aktif = daireler.filter((d) => d.aktif);
+  const kartlar = aktif.map((d) => {
+    const x = borc.get(d.id) || { kalan: 0, geciken: 0, gun: 0 };
+    const oturan = d.ad_soyad || (d.ev_sahibi_oturuyor ? d.ev_sahibi_ad : null);
+    const sinif = x.geciken > 0 ? 'gecikti' : x.kalan > 0 ? 'acik' : 'temiz';
+    return h('button', { class: 'daire-kart ' + sinif, type: 'button', onclick: () => daireHesabi(d.id) },
+      h('span', { class: 'no' }, daireAdi(d)),
+      h('span', { class: 'kiraci' }, oturan || (d.ev_sahibi_ad ? `Malik: ${d.ev_sahibi_ad}` : 'Boş daire')),
+      h('span', { class: 'soluk' }, d.sozlesme_id ? 'Kiracı oturuyor' : d.ev_sahibi_oturuyor ? 'Malik oturuyor' : 'Boş'),
+      h('span', { class: 'alt-satir' },
+        x.geciken > 0 ? h('span', { class: 'rozet turuncu' }, `${x.gun} gün gecikti`) : x.kalan > 0 ? h('span', { class: 'rozet mavi' }, 'Ödeme bekliyor') : rozet('Ödendi'),
+        x.kalan > 0 ? h('b', { class: 'kalan' }, para(x.kalan)) : null));
+  });
+  icerik.replaceChildren(
+    ust('Panel', `${siteAdi() ? siteAdi() + ' · ' : cokSite() ? `${durum.siteler.filter((x) => x.aktif).length} site · ` : ''}${donemTR(o.donem)} · ${o.daire} daire (${o.daire_malik} malik, ${o.daire_kiraci} kiracı, ${o.daire_bos} boş)`,
+      h('button', { class: 'dugme ikincil', onclick: () => giderFormu() }, '+ Gider'),
+      h('button', { class: 'dugme', onclick: () => aidatOdemeFormu() }, '+ Ödeme al')),
+    h('div', { class: 'kpi-sira' },
+      kpiKutu('Bu ay borçlandırılan', para(o.bu_ay_beklenen), 'komur', 'aidat ve ek toplama'),
+      kpiKutu('Tahsil edilen', para(o.bu_ay_odenen), 'mavi', `%${o.tahsil_orani.toLocaleString('tr-TR')}`),
+      kpiKutu('Bu ay kalan', para(o.bu_ay_kalan), 'mavi'),
+      kpiKutu('Geciken', para(o.geciken_toplam), 'turuncu', `${o.borclu_daire} daire · tazminat ${para(o.tazminat_toplam)}`),
+      kpiKutu('Kasa', para(o.kasa), 'komur', `bu ay gider ${para(o.bu_ay_gider)}`)),
+    h('div', { class: 'kart' },
+      h('div', { class: 'kart-baslik' }, h('h2', null, 'Daireler'),
+        h('div', { class: 'takvim-lejant' }, h('span', null, h('i', { class: 'l-dolu' }), 'Ödendi'), h('span', null, h('i', { class: 'l-kismi' }), 'Ödeme bekliyor'), h('span', null, h('i', { class: 'l-bugun' }), 'Gecikti'))),
+      kartlar.length ? (cokSite() && !durum.siteId ? siteGruplari(aktif, kartlar) : h('div', { class: 'daire-izgara' }, kartlar))
+        : h('div', { class: 'bos-liste' }, 'Henüz daire yok. ', yonetici() ? 'Daireler sayfasından ekleyin, sonra Aidat Planı\'ndan aidatı belirleyin.' : '')));
+}
+
+// Dairenin aidat cari hesabı.
+async function daireHesabi(id) {
+  const d = await api('GET', `/api/aidat/daire/${id}`);
+  const yenidenAc = () => { kapat(); daireHesabi(id); };
+  const kisiSatir = (ad, kisi, tel) => (kisi ? h('div', null, h('small', { class: 'soluk' }, ad), h('b', null, kisi), tel ? h('div', { class: 'soluk' }, tel) : null) : null);
+  const govde = h('div', null,
+    h('div', { class: 'detay-ust' },
+      kisiSatir('Kat maliki', d.malik, d.malik_telefon) || h('div', null, h('small', { class: 'soluk' }, 'Kat maliki'), h('span', { class: 'soluk' }, 'girilmemiş')),
+      kisiSatir('Kiracı', d.kiraci, d.kiraci_telefon),
+      h('div', null, h('small', { class: 'soluk' }, 'Bilgi'), h('span', null, [d.tip, d.metrekare ? `${d.metrekare} m²` : null, d.arsa_payi ? `arsa payı ${d.arsa_payi}` : null].filter(Boolean).join(' · ')))),
+    h('div', { class: 'ozet-kutular' },
+      h('div', null, h('small', null, 'Borç bakiyesi'), h('b', { class: d.bakiye > 0 ? 'kalan' : '' }, para(d.bakiye))),
+      h('div', null, h('small', null, 'Avans'), h('b', null, para(d.avans))),
+      h('div', null, h('small', null, 'Gecikme tazminatı (hesaplanan)'), h('b', null, para(d.tazminat)))),
+    h('h3', null, 'Borçlar'),
+    tablo(['Dönem', 'Tür', 'Vade', ['Tutar', 'sayi'], ['Ödenen', 'sayi'], ['Kalan', 'sayi'], 'Durum', ''],
+      d.borclar.map((b) => h('tr', null, h('td', null, donemTR(b.donem)), h('td', null, b.tur === 'Aidat' ? 'Aidat' : b.aciklama), h('td', null, tarihTR(b.vade)),
+        h('td', { class: 'sayi' }, para(b.tutar)), h('td', { class: 'sayi' }, para(b.odenen)), h('td', { class: 'sayi' + (b.kalan > 0 ? ' kalan' : '') }, para(b.kalan)),
+        h('td', null, rozet(b.durum), b.tazminat > 0 ? h('div', { class: 'soluk' }, `tazminat ${para(b.tazminat)}`) : null),
+        h('td', null, yonetici() && b.odenen === 0 ? h('button', { class: 'dugme ikincil kucuk', onclick: () => aidatBorcIptal(b, yenidenAc) }, 'İptal') : null))), 'Borç yok.'),
+    h('h3', null, 'Ödemeler'),
+    tablo(['Makbuz', 'Tarih', 'Ödeyen', 'Tür', ['Tutar', 'sayi'], ''],
+      d.tahsilatlar.map((t) => h('tr', { class: t.iptal ? 'iptal' : '' }, h('td', null, `#${t.makbuz_no}`), h('td', null, tarihTR(t.tarih)), h('td', null, t.odeyen || ''),
+        h('td', null, t.odeme_turu, t.kaynak === 'Banka' ? h('span', { class: 'soluk' }, ' (banka)') : null), h('td', { class: 'sayi' }, para(t.tutar)),
+        h('td', null, h('button', { class: 'dugme ikincil kucuk', onclick: () => makbuzGoster(t.id) }, 'Makbuz'),
+          ' ', yonetici() && !t.iptal ? h('button', { class: 'dugme ikincil kucuk', onclick: () => aidatTahsilatIptal(t, yenidenAc) }, 'İptal') : null))), 'Ödeme yok.'));
+  const kapat = pencere(`${d.site} · ${daireAdi(d)}`, govde, [
+    yonetici() ? h('button', { class: 'dugme ikincil', onclick: () => { kapat(); api('GET', '/api/daireler').then((l) => daireFormu(l.find((x) => x.id === d.id))); } }, 'Daireyi düzenle') : null,
+    h('button', { class: 'dugme', onclick: () => { kapat(); aidatOdemeFormu(d); } }, '+ Ödeme al')].filter(Boolean), { genis: true });
+}
+
+async function aidatOdemeFormu(d = null) {
+  let liste;
+  if (d) liste = [d];
+  else {
+    const [daireler, acik] = await Promise.all([api('GET', '/api/daireler' + siteP('?')), api('GET', '/api/aidat/borclar?durum=Açık' + siteP())]);
+    const kalan = new Map(); for (const b of acik) kalan.set(b.daire_id, (kalan.get(b.daire_id) || 0) + b.kalan);
+    liste = daireler.filter((x) => x.aktif).map((x) => ({ ...x, bakiye: kalan.get(x.id) || 0, kiraci: x.ad_soyad, malik: x.ev_sahibi_ad }));
+  }
+  if (!liste.length) { bildir('Daire yok.', true); return; }
+  const odeyenG = metinGirdi('odeyen', { maxlength: 120, value: liste[0].kiraci || liste[0].malik || '' });
+  const tutarG = tutarGirdi('tutar', { required: true, value: liste[0].bakiye > 0 ? liste[0].bakiye : undefined });
+  const daireG = secimGirdi('daire_id', liste.map((x) => [x.id, `${adi(x)}${x.bakiye > 0 ? ` · borç ${para(x.bakiye)}` : ''}`]), d?.id, {
+    onchange: (e) => { const x = liste.find((y) => String(y.id) === e.target.value); odeyenG.value = x?.kiraci || x?.malik || ''; tutarG.value = x?.bakiye > 0 ? String(x.bakiye).replace('.', ',') : ''; } });
+  let yeniId = null;
+  basitForm(d ? `Aidat ödemesi · ${daireAdi(d)}` : 'Aidat ödemesi al', [
+    alan('Daire', daireG, true),
+    alan('Tutar', tutarG),
+    alan('Tarih', tarihGirdi('tarih', { value: bugun(), required: true, max: bugun() })),
+    alan('Ödeme türü', secimGirdi('odeme_turu', ODEME_TURLERI, 'Nakit')),
+    alan('Ödeyen', odeyenG),
+    alan('Açıklama', metinGirdi('aciklama', { maxlength: 500 }), true),
+    h('p', { class: 'tam soluk' }, 'Ödeme en eski borçtan başlayarak düşer; fazlası sonraki aylara avans olarak geçer. Kaydedince makbuz açılır.'),
+  ], async (v) => { v.daire_id = Number(v.daire_id); const r = await api('POST', '/api/aidat/tahsilatlar', v); yeniId = r.id; bildir(`Ödeme kaydedildi · makbuz #${r.makbuz_no}`); setTimeout(() => makbuzGoster(yeniId), 50); });
+}
+
+async function makbuzGoster(id) {
+  const m = await api('GET', `/api/aidat/makbuz/${id}`);
+  const govde = h('div', { class: 'makbuz' },
+    h('div', { class: 'makbuz-ust' },
+      h('div', null, h('b', null, m.firma), h('div', { class: 'soluk' }, `${m.site}${m.site_adres ? ' · ' + m.site_adres : ''}`)),
+      h('div', { class: 'makbuz-no' }, h('small', null, 'TAHSİLAT MAKBUZU'), h('b', null, `No ${m.makbuz_no}`), h('div', null, tarihTR(m.tarih)))),
+    m.iptal ? h('div', { class: 'makbuz-iptal' }, `İPTAL EDİLDİ · ${m.iptal_nedeni || ''}`) : null,
+    h('dl', { class: 'makbuz-bilgi' },
+      h('dt', null, 'Daire'), h('dd', null, daireAdi(m)),
+      h('dt', null, 'Ödeyen'), h('dd', null, m.odeyen || '—'),
+      h('dt', null, 'Ödeme türü'), h('dd', null, m.odeme_turu),
+      m.aciklama ? h('dt', null, 'Açıklama') : null, m.aciklama ? h('dd', null, m.aciklama) : null),
+    tablo(['Kalem', ['Tutar', 'sayi']], [
+      ...m.kalemler.map((k) => h('tr', null, h('td', null, k.tur === 'Aidat' ? `${donemTR(k.donem)} aidatı` : k.aciklama), h('td', { class: 'sayi' }, para(k.tutar)))),
+      m.avans > 0 ? h('tr', null, h('td', null, 'Avans (sonraki aylara)'), h('td', { class: 'sayi' }, para(m.avans))) : null,
+      h('tr', { class: 'toplam' }, h('td', null, h('b', null, 'Toplam')), h('td', { class: 'sayi' }, h('b', null, para(m.tutar)))),
+    ].filter(Boolean)),
+    h('p', { class: 'makbuz-yazi' }, m.yaziyla),
+    h('div', { class: 'makbuz-imza' }, h('span', null, 'Teslim eden'), h('span', null, 'Teslim alan')));
+  const kapat = pencere(`Makbuz #${m.makbuz_no}`, govde, [
+    h('button', { class: 'dugme ikincil', onclick: () => kapat() }, 'Kapat'),
+    h('button', { class: 'dugme', onclick: () => { document.body.classList.add('makbuz-yazdir'); window.print(); document.body.classList.remove('makbuz-yazdir'); } }, 'Yazdır / PDF')]);
+}
+
+function aidatTahsilatIptal(t, sonra) {
+  const neden = prompt(`Makbuz #${t.makbuz_no} · ${para(t.tutar)} iptal edilsin mi? Nedeni yazın:`);
+  if (!neden) return;
+  api('POST', `/api/aidat/tahsilatlar/${t.id}/iptal`, { neden }).then(() => { bildir('Ödeme iptal edildi; kalan ödemeler yeniden dağıtıldı.'); sonra(); }).catch((e) => bildir(e.message, true));
+}
+function aidatBorcIptal(b, sonra) {
+  const neden = prompt(`${donemTR(b.donem)} ${b.tur.toLowerCase()} borcu (${para(b.tutar)}) iptal edilsin mi? Nedeni yazın:`);
+  if (!neden) return;
+  api('POST', `/api/aidat/borclar/${b.id}/iptal`, { neden }).then(() => { bildir('Borç iptal edildi.'); sonra(); }).catch((e) => bildir(e.message, true));
+}
+
+// Aidat takibi: dönemin borçları.
+async function aidatTakibiSayfasi(icerik) {
+  const q = sorgu();
+  const donem = q.get('donem') || buAy();
+  const d = q.get('durum') || '';
+  const l = await api('GET', `/api/aidat/borclar?donem=${donem}${d ? '&durum=' + encodeURIComponent(d) : ''}${siteP()}`);
+  const git = (deg) => { location.hash = '#/aidat?' + new URLSearchParams({ donem, durum: d, ...deg }); };
+  const t = l.reduce((a, b) => ({ tutar: a.tutar + b.tutar, odenen: a.odenen + b.odenen, kalan: a.kalan + b.kalan, tazminat: a.tazminat + b.tazminat }), { tutar: 0, odenen: 0, kalan: 0, tazminat: 0 });
+  icerik.replaceChildren(
+    ust('Aidat Takibi', `${donemTR(donem)} · ${l.length} kayıt`,
+      h('button', { class: 'dugme ikincil', onclick: () => git({ donem: ayKaydir(donem, -1) }) }, '‹'),
+      h('input', { type: 'month', class: 'secim', value: donem, onchange: (e) => e.target.value && git({ donem: e.target.value }) }),
+      h('button', { class: 'dugme ikincil', onclick: () => git({ donem: ayKaydir(donem, 1) }) }, '›'),
+      h('select', { class: 'secim', onchange: (e) => git({ durum: e.target.value }) },
+        [['', 'Hepsi'], ['Açık', 'Ödenmemiş'], ['Gecikti', 'Gecikenler'], ['Kısmi Ödendi', 'Kısmi'], ['Ödendi', 'Ödenenler']].map(([v, y]) => h('option', { value: v, selected: v === d }, y))),
+      yonetici() ? h('button', { class: 'dugme ikincil', onclick: () => api('POST', '/api/aidat/tahakkuk', { donem, ...(durum.siteId ? { site_id: durum.siteId } : {}) })
+        .then((r) => { bildir(r.hatalar?.length ? r.hatalar.join(' · ') : r.olusan ? `${r.olusan} aidat borcu oluşturuldu.` : 'Bu dönemin aidatları zaten oluşmuş (ya da aidat planı yok).', !!r.hatalar?.length); yenile(); })
+        .catch((e) => bildir(e.message, true)) }, 'Bu dönemin aidatını oluştur') : null,
+      yonetici() ? h('button', { class: 'dugme ikincil', onclick: () => ekToplamaFormu() }, '+ Ek toplama') : null,
+      h('button', { class: 'dugme', onclick: () => aidatOdemeFormu() }, '+ Ödeme al')),
+    h('div', { class: 'ozet-kutular' },
+      h('div', null, h('small', null, 'Beklenen'), h('b', null, para(t.tutar))),
+      h('div', null, h('small', null, 'Tahsil edilen'), h('b', null, para(t.odenen))),
+      h('div', null, h('small', null, 'Kalan'), h('b', { class: t.kalan > 0 ? 'kalan' : '' }, para(t.kalan))),
+      h('div', null, h('small', null, 'Gecikme tazminatı'), h('b', null, para(t.tazminat)))),
+    h('div', { class: 'kart' }, tablo(['Daire', 'Tür', 'Vade', ['Tutar', 'sayi'], ['Ödenen', 'sayi'], ['Kalan', 'sayi'], 'Son ödeme', 'Durum', ''],
+      l.map((b) => h('tr', null,
+        h('td', null, h('b', null, adi(b))), h('td', null, b.tur === 'Aidat' ? 'Aidat' : b.aciklama), h('td', null, tarihTR(b.vade)),
+        h('td', { class: 'sayi' }, para(b.tutar)), h('td', { class: 'sayi' }, para(b.odenen)), h('td', { class: 'sayi' + (b.kalan > 0 ? ' kalan' : '') }, para(b.kalan)),
+        h('td', null, tarihTR(b.son_odeme)),
+        h('td', null, rozet(b.durum), b.durum === 'Gecikti' ? h('span', { class: 'soluk' }, ` ${b.gecikme_gun} gün`) : b.yaklasan ? h('span', { class: 'soluk' }, ' yaklaşıyor') : null),
+        h('td', null, b.kalan > 0 ? h('button', { class: 'dugme turuncu kucuk', onclick: () => api('GET', `/api/aidat/daire/${b.daire_id}`).then(aidatOdemeFormu) }, 'Ödeme al') : null,
+          ' ', h('button', { class: 'dugme ikincil kucuk', onclick: () => daireHesabi(b.daire_id) }, 'Hesap')))),
+      `${donemTR(donem)} için aidat borcu yok. ${yonetici() ? 'Aidat Planı\'nı kaydedip "Bu dönemin aidatını oluştur"a basın.' : ''}`)));
+}
+
+// Borçlular: geciken daireler, tazminat ve hazır hatırlatma.
+async function borclularSayfasi(icerik) {
+  const l = await api('GET', '/api/aidat/borclular' + siteP('?'));
+  const toplam = l.reduce((a, g) => a + g.geciken_tutar, 0);
+  const tazminat = l.reduce((a, g) => a + g.tazminat, 0);
+  icerik.replaceChildren(
+    ust('Borçlular', `${l.length} daire · geciken ${para(toplam)} · hesaplanan tazminat ${para(tazminat)}`),
+    h('div', { class: 'kart' }, l.length ? l.map((g) => h('div', { class: 'geciken-kart' },
+      h('div', null,
+        h('h3', null, `${adi(g)} · ${g.muhatap || 'Malik/oturan girilmemiş'}`, g.kiraci && g.malik ? h('span', { class: 'soluk' }, ` (malik: ${g.malik})`) : null),
+        h('div', { class: 'soluk' }, `${[...new Set(g.donemler)].map(donemTR).join(', ')} · ${g.gecikme_gun} gün gecikme · son ödeme ${g.son_odeme ? tarihTR(g.son_odeme) : 'yok'}`),
+        h('div', { class: 'sms-kutu' }, g.mesaj)),
+      h('div', null,
+        h('div', { class: 'tutar' }, para(g.geciken_tutar)),
+        g.tazminat > 0 ? h('div', { class: 'soluk' }, `+ tazminat ${para(g.tazminat)}`) : null,
+        h('div', { class: 'araclar' },
+          h('button', { class: 'dugme ikincil kucuk', onclick: () => navigator.clipboard.writeText(g.mesaj).then(() => bildir('Mesaj kopyalandı.'), () => bildir('Kopyalanamadı.', true)) }, 'Mesajı kopyala'),
+          g.whatsapp ? h('a', { class: 'dugme ikincil kucuk', href: g.whatsapp, target: '_blank', rel: 'noopener' }, 'WhatsApp') : null,
+          h('button', { class: 'dugme ikincil kucuk', onclick: () => daireHesabi(g.daire_id) }, 'Hesap'),
+          h('button', { class: 'dugme turuncu kucuk', onclick: () => api('GET', `/api/aidat/daire/${g.daire_id}`).then(aidatOdemeFormu) }, 'Ödeme al'))))) : h('div', { class: 'bos-liste' }, 'Geciken aidat yok. 👍')));
+}
+
+// Giderler.
+async function giderlerSayfasi(icerik) {
+  const q = sorgu();
+  const ay = q.get('ay') || buAy();
+  const bas = `${ay}-01`; const bit = `${ayKaydir(ay, 1)}-01`;
+  const l = (await api('GET', `/api/giderler?baslangic=${bas}${siteP()}`)).filter((g) => g.tarih < bit);
+  const git = (a) => { location.hash = '#/giderler?ay=' + a; };
+  const toplam = l.filter((g) => !g.iptal).reduce((a, g) => a + g.tutar, 0);
+  icerik.replaceChildren(
+    ust('Giderler', `${donemTR(ay)} · ${l.length} kayıt · toplam ${para(toplam)}`,
+      h('button', { class: 'dugme ikincil', onclick: () => git(ayKaydir(ay, -1)) }, '‹'),
+      h('input', { type: 'month', class: 'secim', value: ay, onchange: (e) => e.target.value && git(e.target.value) }),
+      h('button', { class: 'dugme ikincil', onclick: () => git(ayKaydir(ay, 1)) }, '›'),
+      h('button', { class: 'dugme', onclick: () => giderFormu() }, '+ Gider')),
+    h('div', { class: 'kart' }, tablo(['Tarih', cokSite() && !durum.siteId ? 'Site' : null, 'Kategori', 'Açıklama', 'Belge', 'Ödeme', ['Tutar', 'sayi'], ''].filter(Boolean),
+      l.map((g) => h('tr', { class: g.iptal ? 'iptal' : '' }, h('td', null, tarihTR(g.tarih)), cokSite() && !durum.siteId ? h('td', null, g.site) : null,
+        h('td', null, g.kategori), h('td', null, g.aciklama || '', g.iptal ? h('div', { class: 'soluk' }, `İptal: ${g.iptal_nedeni}`) : null), h('td', null, g.belge_no || ''), h('td', null, g.odeme_turu),
+        h('td', { class: 'sayi' }, para(g.tutar)),
+        h('td', null, yonetici() && !g.iptal ? h('button', { class: 'dugme ikincil kucuk', onclick: () => {
+          const neden = prompt(`${g.kategori} · ${para(g.tutar)} gideri iptal edilsin mi? Nedeni:`);
+          if (neden) api('POST', `/api/giderler/${g.id}/iptal`, { neden }).then(() => { bildir('Gider iptal edildi.'); yenile(); }).catch((e) => bildir(e.message, true));
+        } }, 'İptal') : null))), `${donemTR(ay)} için gider yok.`)));
+}
+function giderFormu() {
+  const siteler = durum.siteler.filter((x) => x.aktif);
+  if (!siteler.length) { bildir('Önce bir site ekleyin.', true); return; }
+  basitForm('Yeni gider', [
+    siteler.length > 1 ? alan('Site', secimGirdi('site_id', siteler.map((x) => [x.id, x.ad]), tekSiteId() ?? siteler[0].id), true) : null,
+    alan('Tarih', tarihGirdi('tarih', { value: bugun(), required: true })),
+    alan('Kategori', h('span', null, metinGirdi('kategori', { required: true, list: 'gider-kategori', maxlength: 60, placeholder: 'ör. Elektrik' }),
+      h('datalist', { id: 'gider-kategori' }, GIDER_KATEGORILERI.map((k) => h('option', { value: k }))))),
+    alan('Tutar', tutarGirdi('tutar', { required: true })),
+    alan('Ödeme türü', secimGirdi('odeme_turu', ODEME_TURLERI, 'Havale/EFT')),
+    alan('Belge / fatura no', metinGirdi('belge_no', { maxlength: 60 })),
+    alan('Açıklama', metinGirdi('aciklama', { maxlength: 500 }), true),
+  ], async (v) => { v.site_id = Number(v.site_id || siteler[0].id); await api('POST', '/api/giderler', v); bildir('Gider kaydedildi.'); });
+}
+
+// Gelir-gider ve kasa.
+async function gelirGiderSayfasi(icerik) {
+  const q = sorgu();
+  const bas = q.get('baslangic') || `${bugun().slice(0, 4)}-01-01`;
+  const bit = q.get('bitis') || bugun();
+  const r = await api('GET', `/api/gelir-gider?baslangic=${bas}&bitis=${bit}${siteP()}`);
+  const basG = tarihGirdi('b', { class: 'secim', value: bas }); const bitG = tarihGirdi('s', { class: 'secim', value: bit });
+  icerik.replaceChildren(
+    ust('Gelir-Gider', `${tarihTR(bas)} – ${tarihTR(bit)}`, basG, bitG,
+      h('button', { class: 'dugme ikincil', onclick: () => { location.hash = '#/gelir-gider?' + new URLSearchParams({ baslangic: basG.value, bitis: bitG.value }); } }, 'Göster'),
+      h('button', { class: 'dugme', onclick: () => window.print() }, 'Yazdır / PDF')),
+    h('div', { class: 'ozet-kutular' },
+      h('div', null, h('small', null, 'Aidat geliri'), h('b', null, para(r.toplam.gelir))),
+      h('div', null, h('small', null, 'Gider'), h('b', null, para(r.toplam.gider))),
+      h('div', null, h('small', null, 'Fark'), h('b', { class: r.toplam.fark < 0 ? 'kalan' : '' }, para(r.toplam.fark))),
+      h('div', null, h('small', null, `Kasa (${tarihTR(bit)})`), h('b', null, para(r.toplam.kasa)))),
+    h('div', { class: 'kart' }, h('h2', null, 'Siteler'), tablo(['Site', ['Gelir', 'sayi'], ['Gider', 'sayi'], ['Fark', 'sayi'], ['Kasa', 'sayi']],
+      r.siteler.map((s) => h('tr', null, h('td', null, h('b', null, s.site)), h('td', { class: 'sayi' }, para(s.gelir)), h('td', { class: 'sayi' }, para(s.gider)),
+        h('td', { class: 'sayi' + (s.fark < 0 ? ' kalan' : '') }, para(s.fark)), h('td', { class: 'sayi' }, para(s.kasa)))))),
+    h('div', { class: 'kart' }, h('h2', null, 'Gider kalemleri'), tablo(['Kategori', ['Tutar', 'sayi'], ['Pay', 'sayi']],
+      r.kategoriler.map((k) => h('tr', null, h('td', null, k.kategori), h('td', { class: 'sayi' }, para(k.tutar)),
+        h('td', { class: 'sayi' }, r.toplam.gider > 0 ? `%${(Math.round((k.tutar / r.toplam.gider) * 1000) / 10).toLocaleString('tr-TR')}` : ''))), 'Bu aralıkta gider yok.')));
+}
+
+// Aidat planı (işletme projesi) ve dairelerin arsa payı / özel aidatı; ek toplamalar.
+async function aidatPlaniSayfasi(icerik) {
+  const siteler = durum.siteler.filter((x) => x.aktif);
+  if (!siteler.length) { icerik.replaceChildren(ust('Aidat Planı'), h('div', { class: 'kart bos-liste' }, 'Önce Ayarlar > Siteler\'den bir site ekleyin.')); return; }
+  const siteId = Number(sorgu().get('site')) || tekSiteId() || siteler[0].id;
+  const [p, ekler] = await Promise.all([api('GET', `/api/aidat/plan/${siteId}`), api('GET', `/api/aidat/ek-toplamalar?site_id=${siteId}`)]);
+  const hataEl = h('div', { class: 'hata-yazi' });
+  const dugme = h('button', { class: 'dugme', type: 'submit' }, 'Planı kaydet');
+  const yontemG = secimGirdi('aidat_yontemi', [['Sabit', 'Her daireye aynı tutar'], ['Arsa payı', 'Bütçe arsa payına göre'], ['Metrekare', 'Bütçe metrekareye göre'], ['Eşit', 'Bütçe dairelere eşit']], p.aidat_yontemi,
+    { onchange: (e) => { tutarEt.firstChild.textContent = e.target.value === 'Sabit' ? 'Daire başı aylık aidat' : 'Aylık toplam bütçe'; } });
+  const tutarEt = alan(p.aidat_yontemi === 'Sabit' ? 'Daire başı aylık aidat' : 'Aylık toplam bütçe', tutarGirdi('aidat_tutari', { value: p.aidat_tutari, required: true }));
+  const form = h('form', { onsubmit: (e) => { e.preventDefault(); gonder(dugme, hataEl, async () => { await api('PUT', `/api/aidat/plan/${siteId}`, formVerisi(form)); bildir('Aidat planı kaydedildi.'); yenile(); }); } },
+    h('div', { class: 'form' },
+      alan('Paylaştırma', yontemG, true), tutarEt,
+      alan('Son ödeme günü (her ay)', h('input', { type: 'number', name: 'aidat_gunu', min: 1, max: 28, value: p.aidat_gunu, 'data-tur': 'sayi' })),
+      alan('Başlangıç dönemi', h('input', { type: 'month', name: 'aidat_baslangic', value: p.aidat_baslangic || buAy() })),
+      alan('Gecikme tazminatı (aylık %, en çok 5)', tutarGirdi('gecikme_orani', { value: p.gecikme_orani })),
+      alan('Yönetim hesabı IBAN (hatırlatma ve makbuzda)', metinGirdi('iban', { value: p.iban, maxlength: 40, placeholder: 'TR..' }), true),
+      h('div', { class: 'tam' }, hataEl, dugme)));
+  const satirlar = p.daireler.map((d) => {
+    const arsa = tutarGirdi('arsa', { value: d.arsa_payi, placeholder: '' }); const ozel = tutarGirdi('ozel', { value: d.aidat_ozel, placeholder: 'plana göre' });
+    arsa.dataset.daire = d.id; ozel.dataset.daire = d.id;
+    return h('tr', null, h('td', null, h('b', null, daireAdi(d))), h('td', { class: 'sayi' }, d.metrekare || ''), h('td', null, arsa), h('td', null, ozel),
+      h('td', { class: 'sayi' }, d.aylik_aidat ? para(d.aylik_aidat) : '—'));
+  });
+  const tablo2 = tablo(['Daire', ['m²', 'sayi'], 'Arsa payı', 'Özel aidat', ['Aylık aidat', 'sayi']], satirlar, 'Sitede daire yok.');
+  const daireKaydet = h('button', { class: 'dugme ikincil', onclick: async () => {
+    daireKaydet.disabled = true;
+    try {
+      for (const d of p.daireler) {
+        const oku = (ad) => { const el = tablo2.querySelector(`input[name=${ad}][data-daire="${d.id}"]`); const t = el.value.trim(); return t === '' ? null : Number(t.replace(/\./g, '').replace(',', '.')); };
+        const arsa = oku('arsa'); const ozel = oku('ozel');
+        if (arsa !== (d.arsa_payi ?? null) || ozel !== (d.aidat_ozel ?? null)) await api('PUT', `/api/aidat/daire/${d.id}`, { arsa_payi: arsa, aidat_ozel: ozel });
+      }
+      bildir('Daire bilgileri kaydedildi.'); yenile();
+    } catch (e) { bildir(e.message, true); daireKaydet.disabled = false; }
+  } }, 'Daire bilgilerini kaydet');
+  icerik.replaceChildren(
+    ust('Aidat Planı', `${p.ad} · ${p.daireler.length} daire${p.aylik_toplam ? ` · aylık toplam ${para(p.aylik_toplam)}` : ''}`,
+      siteler.length > 1 ? h('select', { class: 'secim', onchange: (e) => { location.hash = '#/aidat-plani?site=' + e.target.value; } }, siteler.map((x) => h('option', { value: x.id, selected: x.id === siteId }, x.ad))) : null),
+    h('div', { class: 'kart' }, h('h2', null, 'Plan'),
+      h('p', { class: 'soluk' }, 'Her ayın aidatı bu plana göre dairelere kendiliğinden yazılır. Özel aidat girilen daire o tutarı öder, bütçenin kalanı diğer dairelere bölünür. Gecikme tazminatı Kat Mülkiyeti Kanunu\'na göre aylık %5\'i geçemez.'),
+      p.hata ? h('p', { class: 'hata-yazi' }, p.hata) : null, form),
+    h('div', { class: 'kart' }, h('div', { class: 'kart-baslik' }, h('h2', null, 'Daireler'), daireKaydet), tablo2),
+    h('div', { class: 'kart' }, h('div', { class: 'kart-baslik' }, h('div', null, h('h2', null, 'Ek toplamalar'), h('p', { class: 'soluk' }, 'Demirbaş, onarım, boya gibi tek seferlik giderin dairelere paylaştırılması.')),
+      h('button', { class: 'dugme kucuk', onclick: () => ekToplamaFormu(siteId) }, '+ Ek toplama')),
+      tablo(['Son ödeme', 'Açıklama', 'Paylaştırma', ['Toplam', 'sayi'], ['Tahsil edilen', 'sayi'], ''], ekler.map((e) => h('tr', { class: e.iptal ? 'iptal' : '' },
+        h('td', null, tarihTR(e.vade)), h('td', null, e.aciklama), h('td', null, e.yontem), h('td', { class: 'sayi' }, para(e.toplam)), h('td', { class: 'sayi' }, para(e.tahsil_edilen)),
+        h('td', null, !e.iptal ? h('button', { class: 'dugme ikincil kucuk', onclick: () => {
+          const neden = prompt(`"${e.aciklama}" ek toplaması iptal edilsin mi? Dairelere yazılan borçlar silinir. Nedeni:`);
+          if (neden) api('POST', `/api/aidat/ek-toplamalar/${e.id}/iptal`, { neden }).then(() => { bildir('Ek toplama iptal edildi.'); yenile(); }).catch((x) => bildir(x.message, true));
+        } }, 'İptal') : null))), 'Ek toplama yok.')));
+}
+function ekToplamaFormu(siteId = null) {
+  const siteler = durum.siteler.filter((x) => x.aktif);
+  basitForm('Ek toplama', [
+    siteler.length > 1 ? alan('Site', secimGirdi('site_id', siteler.map((x) => [x.id, x.ad]), siteId ?? tekSiteId() ?? siteler[0].id), true) : null,
+    alan('Açıklama', metinGirdi('aciklama', { required: true, maxlength: 300, placeholder: 'ör. Çatı onarımı' }), true),
+    alan('Toplam tutar', tutarGirdi('toplam', { required: true })),
+    alan('Paylaştırma', secimGirdi('yontem', [['Arsa payı', 'Arsa payına göre'], ['Metrekare', 'Metrekareye göre'], ['Eşit', 'Dairelere eşit']], 'Arsa payı')),
+    alan('Son ödeme tarihi', tarihGirdi('vade', { required: true, value: `${buAy()}-28` })),
+    h('p', { class: 'tam soluk' }, 'Toplam tutar sitedeki aktif dairelere paylaştırılır ve her dairenin hesabına ayrı borç olarak yazılır.'),
+  ], async (v) => { v.site_id = Number(v.site_id || siteId || siteler[0].id); const r = await api('POST', '/api/aidat/ek-toplamalar', v); bildir(`Ek toplama ${r.daire_sayisi} daireye paylaştırıldı.`); });
+}

@@ -275,3 +275,33 @@ a.dugme { text-decoration: none; display: inline-block; }
 .rozet.koyu { background: #E4E4EA; color: var(--yazi); }
 .daire-kart.ev-sahibi { border-left-color: var(--yazi); background: #F7F7F9; }
 .takvim-lejant .l-ev { background: #F7F7F9; border: 2px solid var(--yazi); }
+
+/* ---- Aidat ---- */
+.ozet-kutular:has(> div:nth-child(4)) { grid-template-columns: repeat(4, 1fr); }
+.kenar .nav-grup { margin: 12px 12px 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--soluk); border-top: 1px solid var(--cizgi); padding-top: 12px; }
+.kenar .nav-grup:empty { margin: 8px 12px; padding-top: 0; }
+.detay-ust { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 4px; }
+.detay-ust small { display: block; font-size: 12px; }
+tr.toplam td { border-top: 2px solid var(--yazi); }
+
+/* Makbuz: ekranda pencere içinde, yazdırırken sayfada tek başına */
+.makbuz { font-size: 14px; }
+.makbuz-ust { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--yazi); margin-bottom: 12px; }
+.makbuz-no { text-align: right; }
+.makbuz-no small { display: block; letter-spacing: .1em; color: var(--soluk); font-weight: 700; font-size: 11px; }
+.makbuz-no b { font-size: 18px; }
+.makbuz-iptal { border: 2px solid var(--kirmizi); color: var(--kirmizi); font-weight: 700; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; text-align: center; }
+.makbuz-bilgi { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; margin: 0 0 12px; }
+.makbuz-bilgi dt { color: var(--soluk); }
+.makbuz-bilgi dd { margin: 0; font-weight: 600; }
+.makbuz-yazi { font-style: italic; margin: 10px 0 0; }
+.makbuz-imza { display: flex; justify-content: space-between; margin-top: 46px; color: var(--soluk); }
+.makbuz-imza span { border-top: 1px solid var(--cizgi); padding-top: 6px; min-width: 160px; text-align: center; }
+@media print {
+  body.makbuz-yazdir > *:not(.perde) { display: none !important; }
+  body.makbuz-yazdir .perde { position: static; background: none; display: block; padding: 0; }
+  body.makbuz-yazdir .pencere { box-shadow: none; max-width: none; width: auto; border: 0; }
+  body.makbuz-yazdir .pencere-ust, body.makbuz-yazdir .pencere-alt { display: none; }
+}
+@media (max-width: 860px) { .ozet-kutular:has(> div:nth-child(4)) { grid-template-columns: 1fr 1fr; } }
+td input[data-tur=sayi] { width: 100%; max-width: 160px; padding: 6px 8px; border: 1px solid var(--cizgi); border-radius: 6px; font: inherit; }

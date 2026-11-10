@@ -126,7 +126,7 @@ test('borçlular: geciken daireler, gecikme tazminatı ve hazır hatırlatma met
   assert.equal(a2.muhatap, 'Ayşe Kaya');
   assert.ok(a2.geciken_tutar >= 2000);
   assert.ok(a2.tazminat > 0, 'aylık %5 tazminat hesaplanır');
-  assert.match(a2.mesaj, /Sayın Ayşe Kaya, Güneş Sitesi A Blok 2 için .* aidat ödemeniz \d+ gündür gecikmiştir\. Ödemenizi TR000000000000000000000099/);
+  assert.match(a2.mesaj, /Sayın Ayşe Kaya, Güneş Sitesi A Blok 2 için .* aidat ödemeniz \d+ gündür gecikmiştir\. Ödemenizi TR00 0000 0000 0000 0000 0000 99/);
   assert.match(a2.whatsapp, /^https:\/\/wa\.me\/905550000002\?text=/);
   const oz = (await y.get('/api/aidat/ozet')).veri;
   assert.ok(oz.borclu_daire >= 2);
