@@ -4,6 +4,10 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ---
 
+## 2026-11-10
+
+- **Canlı kurulum betiği** (`sunucu/`): `kur.sh` (kontrol / kur / ci-anahtar / sertifika) SiteTakipEt'i EnvanterTakipEt sunucusuna ayrı `sitetakip` kullanıcısıyla kurar: PostgreSQL veritabanı ve rastgele parola, `VERI_ANAHTARI` sunucuda üretilir, PM2 (127.0.0.1:3003), nginx (sitetakipet.com.tr → `tanitim/`, panel. → program), 15 dakikalık yerel yedek ve gece şifreli Drive kopyası. `guncelle.sh` + `.github/workflows/canli.yml`: main'e birleştirmede otomatik güncelleme (önce yedek, açılmazsa geri dönüş). Yedek betikleri EnvanterTakipEt'ten. Program artık `HOST` ayarıyla yalnız 127.0.0.1'i dinleyebiliyor. Deneme sunucusunda kurulum, nginx üzerinden sayfa ve sağlık kontrolü, yedek, güncelleme ve geri dönüş provası geçti. Sunucuda henüz bir şey yapılmadı; adımlar `sunucu/KURULUM.md`.
+
 ## 2026-11-09
 
 - **Tanıtım sayfası** (`tanitim/`): KiraTakipEt maket sayfası SiteTakipEt'e uyarlandı: aidat dili, yeni logo ve sekme simgesi, "Giriş yap" bağlantısı (panel.sitetakipet.com.tr), turuncu yerine sarı vurgu (yazıda fosforlu kalem çizgisi), telefonda yatay taşma kırpıldı. Önizleme gösterildi.

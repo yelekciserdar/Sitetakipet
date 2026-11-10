@@ -248,7 +248,11 @@ sertifika() {
 }
 
 case "$mod" in
-  kontrol) denetle && say '' && say 'Eksik yok. Kurmak icin: sudo sh kur.sh kur' || say 'Yukaridaki UYARI satirlarini giderin.' ;;
+  kontrol)
+    if denetle; then
+      say ''
+      if [ -f "$env_file" ] && saglikli 1; then say 'SiteTakipEt kurulu ve calisiyor.'; else say 'Eksik yok. Kurmak icin: sudo sh kur.sh kur'; fi
+    else say 'Yukaridaki UYARI satirlarini giderin.'; fi ;;
   kur) kur ;;
   ci-anahtar) ci_anahtar ;;
   sertifika) sertifika ;;

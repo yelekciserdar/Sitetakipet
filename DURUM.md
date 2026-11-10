@@ -11,7 +11,7 @@
 - [ ] Satış: fiyatlandırma, deneme süresi, firma açma akışı (şimdilik `npm run firma:olustur`).
 
 - [ ] **Tanıtım sayfası** (`tanitim/`, 9 Kasım): mimari maket sayfası SiteTakipEt'e uyarlandı (aidat dili, yeni logo, turuncu yerine sarı); önizleme gösterildi, onay bekleniyor. Panel ekran görüntüsü aidat modülü bitince yenilenecek.
-- [ ] **Canlıya alma (SiteTakipEt):** sunucuda veritabanı ve kullanıcı, PM2 süreci, nginx (sitetakipet.com.tr → `tanitim/`, panel.sitetakipet.com.tr → program), Cloudflare DNS (önce gri bulut, sertifika, sonra turuncu), GitHub Actions ile otomatik güncelleme, yedeğe ekleme, `VERI_ANAHTARI` üretip Drive'a saklama, ilk firma. Kurulum betiğini Claude hazırlar, kullanıcı sunucuda çalıştırır. Satıştan önce aidat modülü bitmeli.
+- [ ] **Canlıya alma (SiteTakipEt)** — betik hazır (`sunucu/kur.sh`, adımlar `sunucu/KURULUM.md`, 10 Kasım; bu oturumda deneme sunucusunda kurulum, nginx, yedek, güncelleme ve geri dönüş provası geçti). **Sırada kullanıcı:** betiği sunucuda `kontrol` → `kur` → VERI_ANAHTARI'nı Drive'a → Cloudflare'de 3 A kaydı (gri) → `sertifika` → turuncu → `ci-anahtar` ve GitHub secret'ları. Plan:  sunucuda veritabanı ve kullanıcı, PM2 süreci, nginx (sitetakipet.com.tr → `tanitim/`, panel.sitetakipet.com.tr → program), Cloudflare DNS (önce gri bulut, sertifika, sonra turuncu), GitHub Actions ile otomatik güncelleme, yedeğe ekleme, `VERI_ANAHTARI` üretip Drive'a saklama, ilk firma. Kurulum betiğini Claude hazırlar, kullanıcı sunucuda çalıştırır. Satıştan önce aidat modülü bitmeli.
 
 ## Fikir kutusu
 - Ev sahibine kira aktarımı: tahsil edilen kiradan yönetim komisyonu düşülüp ev sahibine ödenecek tutar, ev sahibi ekstresi (kullanıcıya soruldu, 9 Kasım).

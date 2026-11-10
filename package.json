@@ -2,7 +2,7 @@
   "name": "kiratakipet",
   "version": "0.1.0",
   "private": true,
-  "description": "KiraTakipEt: daire ve kira takibi için çok firmalı web yönetim sistemi",
+  "description": "SiteTakipEt: site ve apartman yönetimi (aidat, tahsilat, kira takibi) için çok firmalı web sistemi",
   "engines": { "node": ">=22.13 <25" },
   "scripts": {
     "start": "node server.js",
