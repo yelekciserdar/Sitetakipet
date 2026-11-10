@@ -20,7 +20,7 @@ Bütün komutlar sunucuda, SSH ile bağlıyken çalıştırılır.
 **1. Betiği indirip denetleyin** (hiçbir şey değiştirmez):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yelekciserdar/kiratakipet/main/sunucu/kur.sh -o /tmp/sitetakipet-kur.sh
+curl -fsSL https://raw.githubusercontent.com/yelekciserdar/Sitetakipet/main/sunucu/kur.sh -o /tmp/sitetakipet-kur.sh
 ```
 
 ```bash
@@ -69,7 +69,7 @@ Deneme: `https://sitetakipet.com.tr` ve `https://panel.sitetakipet.com.tr`.
 sudo sh /home/sitetakip/sitetakipet/sunucu/kur.sh ci-anahtar
 ```
 
-Ekrana çıkan dört değeri GitHub → `yelekciserdar/kiratakipet` → Settings → Secrets and variables →
+Ekrana çıkan dört değeri GitHub → `yelekciserdar/Sitetakipet` → Settings → Secrets and variables →
 Actions → **New repository secret** ile ekleyin: `DEPLOY_USER`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS`
 (birden çok satır olabilir, hepsini), `DEPLOY_SSH_KEY` (uzun tek satırın tamamı). Anahtar sunucuda
 saklanmaz; kaybolursa bu adım yeniden çalıştırılır.
