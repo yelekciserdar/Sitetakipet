@@ -6,6 +6,7 @@ const { gocleriUygula } = require('./migrate');
 const ck = require('../lib/cekirdek');
 const kr = require('../lib/kira');
 const bk = require('../lib/banka');
+const ai = require('../lib/aidat');
 const st = require('../lib/site');
 
 const SAHIPLER = ['Kemal Ateş', 'Sevgi Yurt', 'Orhan Bal', 'Leyla Gök', 'Murat Can', 'Hülya Deniz'];
@@ -24,7 +25,7 @@ function gun(donem, g) { const son = new Date(Date.UTC(+donem.slice(0, 4), +done
     const parola = process.env.DEMO_PAROLASI;
     if (!parola) throw new Error('DEMO_PAROLASI ortam değişkeni gerekli.');
     await islem(pool, async (c) => {
-      const f = await ck.firmaOlustur(c, { firma_ad: 'Deneme Gayrimenkul', yonetici_ad: 'Deneme Yönetici', eposta: 'demo@deneme.test', parola, site_ad: 'Güneş Sitesi' });
+      const f = await ck.firmaOlustur(c, { firma_ad: 'Deneme Yönetim Hizmetleri', yonetici_ad: 'Deneme Yönetici', eposta: 'demo@deneme.test', parola, site_ad: 'Güneş Sitesi' });
       const ctx = { firma_id: f.firma_id, kullanici_id: f.kullanici_id, rol: 'yonetici' };
       const r = rastgele(7);
       const daireler = [];
@@ -74,6 +75,40 @@ function gun(donem, g) { const son = new Date(Date.UTC(+donem.slice(0, 4), +done
           if (tarih <= bugun) await kr.tahsilatEkle(c, ctx, { sozlesme_id: so.id, tarih, tutar: kira, odeme_turu: 'Havale/EFT' });
         }
       }
+      // Aidat: Güneş Sitesi bütçeyi arsa payına göre böler (arsa payı = m²), Lale Apartmanı sabit aidat.
+      // Çoğu daire düzenli öder; birkaçı geç ya da hiç ödememiş. Her ay site giderleri; Güneş'te bir ek toplama.
+      await c.query('UPDATE firmalar SET kira_modulu = true WHERE id = $1', [f.firma_id]);
+      const { rows: gd } = await c.query('SELECT id, metrekare FROM daireler WHERE site_id = $1 ORDER BY id', [f.site_id]);
+      for (const d of gd) await ai.daireAidatKaydet(c, ctx, d.id, { arsa_payi: d.metrekare });
+      await ai.aidatPlaniKaydet(c, ctx, f.site_id, { aidat_yontemi: 'Arsa payı', aidat_tutari: 54000, aidat_gunu: 10, aidat_baslangic: ay(-3), gecikme_orani: 5, iban: 'TR00 0000 0000 0000 0000 0000 01' });
+      await ai.aidatPlaniKaydet(c, ctx, lale.id, { aidat_yontemi: 'Sabit', aidat_tutari: 1500, aidat_gunu: 15, aidat_baslangic: ay(-3), gecikme_orani: 5 });
+      for (let n = -3; n <= 0; n++) await ai.tahakkuk(c, ctx, { donem: ay(n), sessiz: true });
+      const { rows: tum } = await c.query('SELECT id, site_id FROM daireler WHERE firma_id = $1 ORDER BY id', [f.firma_id]);
+      for (const [i, d] of tum.entries()) {
+        const tip = i % 9 === 4 ? 'odemiyor' : i % 6 === 2 ? 'gec' : 'duzenli';
+        const borclar = (await ai.borclar(c, ctx, { daire_id: d.id })).sort((a, b) => (a.vade < b.vade ? -1 : 1));
+        for (const b of borclar) {
+          const geriAy = (Number(ay(0).slice(0, 4)) - Number(b.donem.slice(0, 4))) * 12 + Number(ay(0).slice(5)) - Number(b.donem.slice(5));
+          if (tip === 'odemiyor' && geriAy <= 2) continue;
+          if (tip === 'gec' && geriAy <= 1) continue;
+          const tarih = gun(b.donem, d.site_id === f.site_id ? 6 + (i % 5) : 10 + (i % 4));
+          if (tarih > bugun) continue;
+          await ai.tahsilatEkle(c, ctx, { daire_id: d.id, tarih, tutar: b.tutar, odeme_turu: r() < 0.75 ? 'Havale/EFT' : 'Nakit' });
+        }
+      }
+      const GIDER = [['Elektrik', 6800, 'Ortak alan elektriği'], ['Su', 2400, 'Bahçe sulama'], ['Temizlik', 14000, 'Temizlik firması'], ['Güvenlik', 18500, 'Güvenlik hizmeti'],
+        ['Asansör', 3200, 'Aylık bakım'], ['Yönetim Ücreti', 7500, 'Profesyonel yönetim']];
+      for (let n = -3; n <= 0; n++) {
+        for (const [j, [kat, tutar, ack]] of GIDER.entries()) {
+          const tarih = gun(ay(n), 3 + j * 3);
+          if (tarih <= bugun) await ai.giderEkle(c, ctx, { site_id: f.site_id, tarih, kategori: kat, tutar: Math.round(tutar * (0.9 + r() * 0.2)), aciklama: ack, belge_no: `F-${ay(n).replace('-', '')}-${j + 1}` });
+        }
+        const lt = gun(ay(n), 8);
+        if (lt <= bugun) { await ai.giderEkle(c, ctx, { site_id: lale.id, tarih: lt, kategori: 'Temizlik', tutar: 4500, aciklama: 'Merdiven temizliği' });
+          await ai.giderEkle(c, ctx, { site_id: lale.id, tarih: lt, kategori: 'Elektrik', tutar: 1200, aciklama: 'Ortak alan' }); }
+      }
+      await ai.ekToplamaEkle(c, ctx, { site_id: f.site_id, aciklama: 'Asansör revizyonu', toplam: 48000, yontem: 'Metrekare', vade: gun(ay(0), 28) });
+
       // Örnek banka ekstresi: biri kodla otomatik eşleşir, biri kontrol ister, biri kira değildir
       const tr = (t) => t.split('-').reverse().join('.');
       const csv = ['Tarih;Açıklama;Tutar;Gönderen;IBAN',
