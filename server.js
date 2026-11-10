@@ -12,7 +12,8 @@ async function baslat() {
   const port = Number(process.env.PORT || 3000);
   const sunucu = http.createServer(uygulamaOlustur(pool));
   sunucu.requestTimeout = 60_000;
-  sunucu.listen(port, () => console.log(`KiraTakipEt ${port} numaralı kapıda çalışıyor.`));
+  // HOST=127.0.0.1 canlıda yalnız nginx'in erişmesi için; boşsa bütün arayüzler (Docker).
+  sunucu.listen(port, process.env.HOST || undefined, () => console.log(`SiteTakipEt ${port} numaralı kapıda çalışıyor.`));
 
   // Her ayın kira borcu kendiliğinden oluşur: açılışta ve saatte bir (aynı ay ikinci kez yazılmaz).
   const tahakkukCalistir = () => otomatikTahakkuk(pool, islem)

@@ -1,0 +1,52 @@
+name: Canli site guncelleme
+# main'e her birleştirmede canlı sunucudan tam o commit'e geçmesini ister. Sunucudaki anahtar yalnız
+# sunucu/guncelle.sh'ı çalıştırabilir (zorunlu komut); betik önce yedek alır, açılmazsa geri döner.
+# Secret'lar tanımlı değilse (kurulumdan önce) iş uyarı verip atlanır.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md']
+  # Elle: "surum" boş = main'in son hâli; "onceki" = canlıdakinden bir önceki sürüm; ya da commit kimliği.
+  workflow_dispatch:
+    inputs:
+      surum:
+        description: 'Boş = main son hâli · onceki = bir önceki sürüme geri dön · ya da commit kimliği'
+        required: false
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: canli-site-guncelleme
+  cancel-in-progress: false
+jobs:
+  guncelle:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: sunucu/ci-ssh-key.sh
+          sparse-checkout-cone-mode: false
+      - name: Sunucuyu bu commit'e guncelle
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SHA: ${{ inputs.surum || github.sha }}
+        run: |
+          case "$SHA" in onceki) echo 'Elle geri donus: canlidaki surumden bir oncekine.';; *[!0-9a-f]*|'') echo '::error::surum: bos, onceki ya da 40 karakterlik commit kimligi olmali.'; exit 1;; esac
+          if [ "$SHA" != onceki ] && [ "${#SHA}" != 40 ]; then echo '::error::Commit kimligi 40 karakter olmali.'; exit 1; fi
+          if [ -z "$HOST" ] || [ -z "$KEY" ] || [ -z "$KNOWN_HOSTS" ] || [ -z "$DEPLOY_USER" ]; then
+            echo '::warning::DEPLOY_HOST, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS veya DEPLOY_USER tanimli degil; canli guncelleme atlandi.'
+            exit 0
+          fi
+          install -d -m 700 ~/.ssh
+          sh sunucu/ci-ssh-key.sh ~/.ssh/deploy_key
+          HOST=$(printf '%s' "$HOST" | tr -d ' \t\r\n')
+          printf '%s\n' "$KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          USER_NAME=$(printf '%s' "$DEPLOY_USER" | tr -d ' \t\r\n')
+          case "$USER_NAME" in *[!a-z0-9_-]*|'') echo '::error::DEPLOY_USER gecersiz.'; exit 1;; esac
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 "$USER_NAME@$HOST" "$SHA"
