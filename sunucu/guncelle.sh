@@ -23,7 +23,7 @@ pm2_name=${DEPLOY_PM2_NAME:-sitetakipet}
 health=${DEPLOY_HEALTH_URL:-http://127.0.0.1:3003/api/saglik}
 npm=${DEPLOY_NPM:-npm}
 pm2=${DEPLOY_PM2:-pm2}
-PATH=$node_bin:/usr/local/bin:/usr/bin:/bin
+PATH=$node_bin:${DEPLOY_PM2_DIR:-/opt/pm2-sitetakip}/bin:/usr/local/bin:/usr/bin:/bin
 export PATH
 
 log() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*"; }
@@ -82,4 +82,4 @@ log "Yeni surum saglikli acilmadi; onceki surume donuluyor: $previous" >&2
 if switch_to "$previous" && healthy; then
   fail "Geri donus basarili. Canli surum: $previous"
 fi
-fail 'GERI DONUS DA BASARISIZ. Sunucuya baglanip "sudo -u sitetakip -H pm2 logs sitetakipet" ile kontrol edin.'
+fail 'GERI DONUS DA BASARISIZ. Sunucuya baglanip "sudo -u sitetakip -H /opt/pm2-sitetakip/bin/pm2 logs sitetakipet" ile kontrol edin.'
