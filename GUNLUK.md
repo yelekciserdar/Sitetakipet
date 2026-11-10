@@ -6,6 +6,7 @@ En yenisi en üstte. Her kayıtta: ne yapıldı, neden, sunucuda elle yapılan i
 
 ## 2026-11-10
 
+- **Otomatik güncelleme bağlandı:** kullanıcı `ci-anahtar` çıktısını GitHub secret'larına girdi (DEPLOY_USER, DEPLOY_HOST, DEPLOY_KNOWN_HOSTS, DEPLOY_SSH_KEY). Elle başlatılan "Canli site guncelleme" sunucuya bağlandı ("Zaten guncel"). Kullanıcı depo adını GitHub'da `Sitetakipet` yaptı; betik ve belgedeki adresler yeni ada çevrildi (eski adres GitHub yönlendirmesiyle çalışmaya devam ediyor).
 - **sitetakipet.com.tr yayında:** kullanıcı Cloudflare'de @, www, panel A kayıtlarını (gri) açtı, `kur.sh sertifika` ile Let's Encrypt sertifikası alındı, ardından turuncu buluta geçildi. Tanıtım sayfası ve panel giriş ekranı Cloudflare üzerinden açılıyor, `/api/saglik` sağlam, http → https yönlendirmesi çalışıyor.
 - **Sunucuda kurulum yapıldı (kullanıcı):** `kur.sh kur` başarılı. VERI_ANAHTARI sohbete ekran görüntüsüyle düştüğü için kullanıcı sunucuda yeniledi ve programı yeniden başlattı (henüz şifrelenmiş veri yoktu); yeni anahtar kullanıcının şifre yöneticisinde. Sırada Cloudflare DNS (gri) ve sertifika.
 - **Kurulum düzeltmesi:** canlı sunucuda PM2 Node klasöründe değilmiş (kullanıcının `kontrol` çıktısı). Betik artık SiteTakipEt için ayrı bir PM2 kopyasını `/opt/pm2-sitetakip` altına kendisi kuruyor; EnvanterTakipEt'in PM2'sine dokunmuyor. Deneme sunucusunda temiz kurulum ve güncelleme yeniden geçti.

@@ -16,7 +16,7 @@ h=/home/$u
 app=$h/sitetakipet
 env_file=$h/sitetakipet.env
 basla=$h/sitetakipet-baslat.sh
-repo=${KUR_DEPO:-https://github.com/yelekciserdar/kiratakipet.git}
+repo=${KUR_DEPO:-https://github.com/yelekciserdar/Sitetakipet.git}
 dal=${KUR_DAL:-main}
 db=${KUR_VERITABANI:-sitetakipet}
 port=${KUR_PORT:-3003}
@@ -222,7 +222,7 @@ ci_anahtar() {
   printf 'restrict,command="/bin/sh %s/sunucu/guncelle.sh" %s\n' "$app" "$(cat "$tmp/k.pub")" >>"$tmp/ak"
   install -m 600 -o "$u" -g "$u" "$tmp/ak" "$ak"
   ip=$(sunucu_ip)
-  say 'GitHub > yelekciserdar/kiratakipet > Settings > Secrets and variables > Actions > New repository secret:'
+  say 'GitHub > yelekciserdar/Sitetakipet > Settings > Secrets and variables > Actions > New repository secret:'
   say ''
   say '  DEPLOY_USER'
   say "    $u"
